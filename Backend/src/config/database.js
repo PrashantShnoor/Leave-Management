@@ -4,7 +4,7 @@ const pool = new Pool({
   user: "postgres",
   host: "localhost",
   database: "leave-managementdb",
-  password: "",
+  password: "914272",
   port: 5432,
 });
 

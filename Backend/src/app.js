@@ -1,7 +1,17 @@
 const express = require("express");
-const { connectDB } = require("./config/database");
+const { pool, connectDB } = require("./config/database");
 
 const app = express();
+
+const userRoutes = require("./routes/employee");
+const requestRoutes = require("./routes/request");
+const leaveTypeRoutes = require("./routes/leave")
+
+app.use(express.json());
+
+app.use("/" , userRoutes);
+app.use("/" , requestRoutes);
+app.use("/" , leaveTypeRoutes);
 
 connectDB()
   .then(() => {
