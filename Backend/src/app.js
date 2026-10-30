@@ -5,13 +5,15 @@ const app = express();
 
 const userRoutes = require("./routes/employee");
 const requestRoutes = require("./routes/request");
-const leaveTypeRoutes = require("./routes/leave")
+const leaveTypeRoutes = require("./routes/leavetype");
+const leaveBalanceRoute = require("./routes/leavebalance");
 
 app.use(express.json());
 
 app.use("/" , userRoutes);
 app.use("/" , requestRoutes);
 app.use("/" , leaveTypeRoutes);
+app.use("/" , leaveBalanceRoute);
 
 connectDB()
   .then(() => {
