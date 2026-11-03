@@ -91,6 +91,77 @@ requestRoutes.post("/createLeave", async (req, res) => {
   }
 });
 
+requestRoutes.get("/getLeaveRequests/:id" ,async (req , res)=> {
+  try {
+    const { id } = req.params;
+
+    if(!id) {
+      return res.status(400).json({
+        message : "employee_id is needed",
+      });
+    }
+    if(!Number.isInteger(Number(id)) || Number(id) <= 0) {
+      return res.status(400).json({
+        message : "Invalid employee_id",
+      })
+    }
+
+    const query = `SELECT * 
+      FROM leave_request
+      WHERE employee_id = $1`
+    
+    const values = [id];
+    const result = await pool.query(query , values);
+
+    return res.status(201).json({
+      message : "All the leave information about the employee is here",
+      employee_balance : result.rows ,
+    })
+
+  } catch (error) {
+    
+  }
+})
+
+requestRoutes.get("/getAllrequest", async (req, res) => {
+  try {
+    const query = `
+      SELECT
+        lr.id,
+        lr.employee_id,
+        e.first_name AS employee_name,
+        e.email AS employee_email,
+        lr.leave_type_id,
+        lr.start_date,
+        lr.end_date,
+        lr.requested_days,
+        lr.reason,
+        lr.status,
+        lr.reviewer_id,
+        lr.reviewer_comment,
+        lr.created_at,
+        lr.updated_at
+      FROM leave_request lr
+      INNER JOIN employees e
+        ON lr.employee_id = e.id
+      ORDER BY lr.created_at DESC;
+    `;
+
+    const result = await pool.query(query);
+
+    return res.status(200).json({
+      message: "All leave requests fetched successfully",
+      leave_requests: result.rows,
+    });
+
+  } catch (error) {
+    console.error("Error fetching leave requests:", error);
+
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+});
 requestRoutes.patch("/approveLeave/:id", async (req, res) => {
   const client = await pool.connect();
 
