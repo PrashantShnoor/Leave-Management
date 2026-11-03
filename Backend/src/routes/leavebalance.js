@@ -48,4 +48,36 @@ leaveBalanceRoute.post("/createLeavebalance" , async (req , res) => {
     }
 });
 
+leaveBalanceRoute.get("/getLeavebalance/:id" , async (req , res)=> {
+    try {
+        const { id } = req.params;
+
+        if(!id) {
+            return res.status(400).json({
+                message : "employee_id is needed",
+            });
+        }
+
+        if(!Number.isInteger(Number(id)) || Number(id) <= 0) {
+            return res.status(400).json({
+                message : "Invalid employee_id",
+            })
+        }
+
+        const query =  `SELECT *
+            FROM employee_leave_balance
+            WHERE employee_id = $1`
+        
+        const values = [id];
+        const result = await pool.query(query , values);
+
+        return res.status(201).json({
+            message : "All the leave information about the employee is here",
+            employee_balance : result.rows ,
+        })
+    } catch (error) {
+        
+    }
+})
+
 module.exports = leaveBalanceRoute;
