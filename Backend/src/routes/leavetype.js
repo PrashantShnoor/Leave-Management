@@ -1,5 +1,5 @@
-const express = require("express");
-const { pool } = require("../config/database");
+import express from "express";
+import { pool } from "../config/database.js";
 
 const leaveTypeRoutes = express.Router();
 
@@ -36,5 +36,29 @@ leaveTypeRoutes.post("/createLeaveType", async (req, res) => {
     });
   }
 });
+leaveTypeRoutes.get("/getLeaveTypes", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT
+          id,
+          type,
+          description
+       FROM leave_type
+       ORDER BY type ASC`
+    );
 
-module.exports = leaveTypeRoutes;
+    return res.status(200).json({
+      message: "Leave types fetched successfully",
+      data: result.rows,
+    });
+
+  } catch (error) {
+    console.error("Get leave types error:", error);
+
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+});
+
+export default leaveTypeRoutes;

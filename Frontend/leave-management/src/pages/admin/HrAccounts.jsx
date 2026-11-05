@@ -1,0 +1,239 @@
+import React, { useEffect, useMemo, useState } from "react";
+import axios from "axios";
+import {
+  FiBriefcase,
+  FiPlus,
+  FiSearch,
+} from "react-icons/fi";
+
+import HRAccountForm from "../../components/admin/HrAccountForm";
+import SummaryCard from "../../components/common/SummaryCard";
+import DataTable from "../../components/common/DataTable";
+import BASE_URL from "../../utils/constants";
+
+const HrAccounts = () => {
+  const [hrAccounts, setHrAccounts] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  // Fetch HR accounts from the backend
+  const fetchHrAccounts = async () => {
+    try {
+      setLoading(true);
+      setErrorMessage("");
+
+      const response = await axios.get(
+        `${BASE_URL}/getAllHrAccounts`,
+        {
+          withCredentials: true,
+        }
+      );
+
+      setHrAccounts(response.data.data || []);
+    } catch (error) {
+      console.error(
+        "Fetch HR accounts error:",
+        error.response?.data || error
+      );
+
+      setErrorMessage(
+        error.response?.data?.message ||
+          "Unable to fetch HR accounts."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchHrAccounts();
+  }, []);
+
+  // Search HR accounts
+  const filteredAccounts = useMemo(() => {
+    const searchValue = search.toLowerCase().trim();
+
+    return hrAccounts.filter((account) => {
+      const fullName =
+        `${account.first_name} ${account.last_name}`.toLowerCase();
+
+      return (
+        fullName.includes(searchValue) ||
+        account.email.toLowerCase().includes(searchValue)
+      );
+    });
+  }, [hrAccounts, search]);
+
+  // Create a new HR account
+  const handleCreateAccount = async (accountData) => {
+    try {
+      setCreating(true);
+      setErrorMessage("");
+      setSuccessMessage("");
+
+      const response = await axios.post(
+        `${BASE_URL}/createHrAccount`,
+        {
+          first_name: accountData.first_name,
+          last_name: accountData.last_name,
+          email: accountData.email,
+          password: accountData.password,
+        },
+        {
+          withCredentials: true,
+        }
+      );
+
+      setSuccessMessage(
+        response.data.message || "HR account created successfully."
+      );
+
+      setShowForm(false);
+
+      // Fetch the updated records from PostgreSQL
+      await fetchHrAccounts();
+    } catch (error) {
+      console.error(
+        "Create HR account error:",
+        error.response?.data || error
+      );
+
+      setErrorMessage(
+        error.response?.data?.message ||
+          "Failed to create HR account."
+      );
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const columns = [
+    {
+      key: "id",
+      label: "ID",
+    },
+    {
+      key: "first_name",
+      label: "HR Account",
+      render: (row) => (
+        <div>
+          <p className="font-semibold text-gray-800">
+            {row.first_name} {row.last_name}
+          </p>
+          <p className="text-xs text-gray-500">{row.email}</p>
+        </div>
+      ),
+    },
+    {
+      key: "role",
+      label: "Role",
+      render: () => (
+        <span className="badge badge-info">HR</span>
+      ),
+    },
+  ];
+
+  return (
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-green-900">
+            HR Accounts
+          </h1>
+          <p className="mt-1 text-sm text-gray-500">
+            Create and manage HR administrator accounts.
+          </p>
+        </div>
+
+        <button
+          onClick={() => {
+            setShowForm((prev) => !prev);
+            setErrorMessage("");
+            setSuccessMessage("");
+          }}
+          className="btn border-none bg-green-700 text-white hover:bg-green-800"
+        >
+          <FiPlus size={18} />
+          Create HR Account
+        </button>
+      </div>
+
+      {/* Messages */}
+      {successMessage && (
+        <div className="alert border border-green-200 bg-green-50 text-green-800">
+          {successMessage}
+        </div>
+      )}
+
+      {errorMessage && (
+        <div className="alert border border-red-200 bg-red-50 text-red-700">
+          {errorMessage}
+        </div>
+      )}
+
+      {/* Summary */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <SummaryCard
+          title="Total HR Accounts"
+          count={loading ? "-" : hrAccounts.length}
+          icon={<FiBriefcase size={20} />}
+          color="green"
+        />
+      </div>
+
+      {/* Create HR Form */}
+      {showForm && (
+        <HRAccountForm
+          onSubmit={handleCreateAccount}
+          onCancel={() => setShowForm(false)}
+        />
+      )}
+
+      {creating && (
+        <div className="flex items-center gap-2 text-sm text-green-700">
+          <span className="loading loading-spinner loading-sm"></span>
+          Creating HR account...
+        </div>
+      )}
+
+      {/* Search */}
+      <div className="relative max-w-md">
+        <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+
+        <input
+          type="text"
+          placeholder="Search HR accounts..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="input input-bordered w-full pl-10"
+        />
+      </div>
+
+      {/* HR Accounts Table */}
+      <section className="space-y-3">
+        <h2 className="font-semibold text-gray-800">
+          HR Account Records
+        </h2>
+
+        {loading ? (
+          <div className="flex justify-center py-10">
+            <span className="loading loading-spinner loading-lg text-green-700"></span>
+          </div>
+        ) : (
+          <DataTable
+            columns={columns}
+            data={filteredAccounts}
+            emptyMessage="No HR accounts found."
+          />
+        )}
+      </section>
+    </div>
+  );
+};
+
+export default HrAccounts;

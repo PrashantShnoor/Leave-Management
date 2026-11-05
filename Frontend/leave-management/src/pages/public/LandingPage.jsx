@@ -96,14 +96,14 @@ const LandingPage = () => {
             </button>
 
             <a
-              href="/dashboard"
+              href="/login"
               className="hidden text-sm font-medium text-slate-700 hover:text-emerald-600 sm:block"
             >
               Login
             </a>
 
             <a
-              href="/dashboard"
+              href="/login"
               className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-emerald-200 transition hover:bg-emerald-700"
             >
               Get Started
@@ -148,14 +148,14 @@ const LandingPage = () => {
 
           <div className="mt-7 flex flex-wrap justify-center gap-3">
             <a
-              href="/dashboard"
+              href="/login"
               className="rounded-xl bg-emerald-600 px-7 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-200 transition hover:-translate-y-0.5 hover:bg-emerald-700"
             >
               Get Started <span className="ml-2">→</span>
             </a>
 
             <a
-              href="/dashboard"
+              href="/login"
               className="rounded-xl border border-slate-200 bg-white px-8 py-3 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-700"
             >
               Login

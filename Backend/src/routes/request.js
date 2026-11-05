@@ -1,12 +1,13 @@
-const express = require("express");
-const { pool } = require("../config/database");
-
+import express from "express";
+import { pool } from "../config/database.js";
+import authMiddleware  from "../middleware/auth.js";
+import bcrypt from "bcrypt";
 const requestRoutes = express.Router();
 
-requestRoutes.post("/createLeave", async (req, res) => {
+requestRoutes.post("/createLeave",authMiddleware , async (req, res) => {
   try {
+    const employee_id = req.user.id;
     const {
-      employee_id,
       leave_type_id,
       start_date,
       end_date,
@@ -18,7 +19,6 @@ requestRoutes.post("/createLeave", async (req, res) => {
     } = req.body;
 
     if (
-      !employee_id ||
       !leave_type_id ||
       !start_date ||
       !end_date ||
@@ -91,9 +91,9 @@ requestRoutes.post("/createLeave", async (req, res) => {
   }
 });
 
-requestRoutes.get("/getLeaveRequests/:id" ,async (req , res)=> {
+requestRoutes.get("/getLeaveRequests", authMiddleware ,async (req , res)=> {
   try {
-    const { id } = req.params;
+    const id = req.user.id;
 
     if(!id) {
       return res.status(400).json({
@@ -122,7 +122,33 @@ requestRoutes.get("/getLeaveRequests/:id" ,async (req , res)=> {
     
   }
 })
+requestRoutes.get("/getAllEmployees", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT
+          id,
+          first_name,
+          last_name,
+          email,
+          role
+       FROM employees
+       WHERE LOWER(role) = 'employee'
+       ORDER BY first_name ASC`
+    );
 
+    return res.status(200).json({
+      message: "Employees fetched successfully",
+      data: result.rows,
+    });
+
+  } catch (error) {
+    console.error("Get all employees error:", error);
+
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+});
 requestRoutes.get("/getAllrequest", async (req, res) => {
   try {
     const query = `
@@ -343,4 +369,263 @@ requestRoutes.patch("/rejectLeave/:id", async (req, res) => {
     client.release();
   }
 });
-module.exports = requestRoutes;
+
+
+requestRoutes.get("/getAdminDashboard", authMiddleware, async (req, res) => {
+  try {
+    // 1. Organization statistics
+    const organizationQuery = await pool.query(`
+      SELECT
+        COUNT(*) FILTER (
+          WHERE LOWER(role) = 'employee'
+        ) AS total_employees,
+
+        COUNT(*) FILTER (
+          WHERE LOWER(role) = 'hr'
+        ) AS hr_accounts
+
+      FROM employees
+    `);
+
+   
+
+    // 3. Leave request statistics
+    const leaveStatisticsQuery = await pool.query(`
+      SELECT
+        COUNT(*) AS leave_requests,
+
+        COUNT(*) FILTER (
+          WHERE LOWER(status) = 'pending'
+        ) AS pending_requests,
+
+        COUNT(*) FILTER (
+          WHERE LOWER(status) = 'approved'
+        ) AS approved_requests,
+
+        COUNT(*) FILTER (
+          WHERE LOWER(status) = 'rejected'
+        ) AS rejected_requests
+
+      FROM leave_request
+    `);
+
+    // 4. Employees currently on leave
+    const employeesOnLeaveQuery = await pool.query(`
+      SELECT COUNT(DISTINCT employee_id) AS employees_on_leave
+      FROM leave_request
+      WHERE LOWER(status) = 'approved'
+        AND CURRENT_DATE BETWEEN start_date AND end_date
+    `);
+
+   
+
+    // 6. Prepare dashboard response
+    const organization = {
+      totalEmployees: Number(
+        organizationQuery.rows[0].total_employees
+      ),
+      hrAccounts: Number(
+        organizationQuery.rows[0].hr_accounts
+      ),
+      
+      leaveRequests: Number(
+        leaveStatisticsQuery.rows[0].leave_requests
+      ),
+    };
+
+    const leaveStatistics = {
+      pendingRequests: Number(
+        leaveStatisticsQuery.rows[0].pending_requests
+      ),
+      approvedRequests: Number(
+        leaveStatisticsQuery.rows[0].approved_requests
+      ),
+      rejectedRequests: Number(
+        leaveStatisticsQuery.rows[0].rejected_requests
+      ),
+      employeesOnLeave: Number(
+        employeesOnLeaveQuery.rows[0].employees_on_leave
+      ),
+    };
+
+    return res.status(200).json({
+      message: "Admin dashboard data fetched successfully",
+      data: {
+        organization,
+        leaveStatistics,
+      },
+    });
+
+  } catch (error) {
+    console.error("Admin dashboard error:", error);
+
+    return res.status(500).json({
+      message: "Failed to fetch admin dashboard data",
+      error: error.message,
+    });
+  }
+});
+
+requestRoutes.get("/getAllHrAccounts", authMiddleware, async (req, res) => {
+  try {
+    // Debug: Check authenticated user
+    console.log("Authenticated user:", req.user);
+
+    const result = await pool.query(`
+      SELECT
+        id,
+        first_name,
+        last_name,
+        email,
+        role
+      FROM employees
+      WHERE LOWER(role) = 'hr'
+      ORDER BY id DESC
+    `);
+
+    return res.status(200).json({
+      message: "HR accounts fetched successfully.",
+      data: result.rows,
+    });
+
+  } catch (error) {
+    console.error("Get all HR accounts error:", error);
+
+    return res.status(500).json({
+      message: "Failed to fetch HR accounts.",
+    });
+  }
+});
+
+requestRoutes.post("/createHrAccount", authMiddleware, async (req, res) => {
+  try {
+    // Only admin can create HR accounts
+    // if (req.user?.role !== "admin") {
+    //   return res.status(403).json({
+    //     message: "Access denied. Admin only.",
+    //   });
+    // }
+
+    const { first_name, last_name, email, password } = req.body;
+
+    // Validate required fields
+    if (
+      !first_name?.trim() ||
+      !last_name?.trim() ||
+      !email?.trim() ||
+      typeof password !== "string" ||
+      !password.trim()
+    ) {
+      return res.status(400).json({
+        message: "All fields are required.",
+      });
+    }
+
+    // Check if email already exists
+    const existingUser = await pool.query(
+      `SELECT id FROM employees WHERE LOWER(email) = LOWER($1)`,
+      [email.trim()]
+    );
+
+    if (existingUser.rows.length > 0) {
+      return res.status(409).json({
+        message: "Email already registered.",
+      });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Insert HR account
+    const result = await pool.query(
+      `INSERT INTO employees
+        (first_name, last_name, email, password_hash, role)
+       VALUES ($1, $2, $3, $4, 'hr')
+       RETURNING id, first_name, last_name, email, role`,
+      [
+        first_name.trim(),
+        last_name.trim(),
+        email.trim(),
+        hashedPassword,
+      ]
+    );
+
+    return res.status(201).json({
+      message: "HR account created successfully.",
+      data: result.rows[0],
+    });
+
+  } catch (error) {
+    console.error("Create HR account error:", error);
+
+    if (error.code === "23505") {
+      return res.status(409).json({
+        message: "Email already registered.",
+      });
+    }
+
+    return res.status(500).json({
+      message: "Failed to create HR account.",
+    });
+  }
+});
+
+requestRoutes.get("/hrDashboardSummary", authMiddleware, async (req, res) => {
+  try {
+    // Only HR and Admin can access this dashboard summary
+    const role = req.user?.role?.toLowerCase();
+
+    if (role !== "hr" && role !== "admin") {
+      return res.status(403).json({
+        message: "Access denied.",
+      });
+    }
+
+    const employeeQuery = `
+      SELECT COUNT(*) AS total_employees
+      FROM employees
+      WHERE LOWER(role) = 'employee'
+    `;
+
+    const leaveQuery = `
+      SELECT
+        COUNT(*) FILTER (
+          WHERE LOWER(status) = 'pending'
+        ) AS pending_requests,
+
+        COUNT(*) FILTER (
+          WHERE LOWER(status) = 'approved'
+        ) AS approved_leaves,
+
+        COUNT(*) FILTER (
+          WHERE LOWER(status) = 'rejected'
+        ) AS rejected_leaves
+
+      FROM leave_request
+    `;
+
+    const [employeeResult, leaveResult] = await Promise.all([
+      pool.query(employeeQuery),
+      pool.query(leaveQuery),
+    ]);
+
+    return res.status(200).json({
+      message: "HR dashboard summary fetched successfully.",
+      data: {
+        totalEmployees: Number(employeeResult.rows[0].total_employees),
+        pendingRequests: Number(leaveResult.rows[0].pending_requests),
+        approvedLeaves: Number(leaveResult.rows[0].approved_leaves),
+        rejectedLeaves: Number(leaveResult.rows[0].rejected_leaves),
+      },
+    });
+
+  } catch (error) {
+    console.error("HR Dashboard Summary Error:", error.message);
+
+    return res.status(500).json({
+      message: "Failed to fetch dashboard summary.",
+    });
+  }
+});
+
+export default requestRoutes;

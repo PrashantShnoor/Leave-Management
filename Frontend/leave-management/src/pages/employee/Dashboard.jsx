@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import BASE_URL from "../utils/constants";
+import BASE_URL from "../../utils/constants";
 import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
@@ -14,7 +14,7 @@ const Dashboard = () => {
     try {
       setLoading(true);
 
-      const response = await axios.get( BASE_URL + "/getLeavebalance/6",
+      const response = await axios.get( BASE_URL + "/getLeavebalance",
         { withCredentials: true }
       );
 

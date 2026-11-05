@@ -1,23 +1,79 @@
-import React from 'react'
-import { Route , Routes , Navigate } from 'react-router-dom'
-import Navbar from './components/Navbar'
-import Dashboard from './pages/Dashboard'
-import Leaves from './pages/Leaves'
-import Manage from './pages/Manage'
-import LandingPage from './pages/LandingPage'
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-const App = () => {
+import ProtectedRoutes from "./routes/ProtectedRoutes";
+import AdminLayout from "./layouts/AdminLayout";
+import EmployeeHrLayout from "./layouts/EmployeeHrLayout";
+
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import EmployeeManagement from "./pages/admin/EmployeeManagement";
+
+import HRDashboard from "./pages/hr/Dashboard";
+import Manage from "./pages/hr/Manage";
+import Employees from "./pages/hr/Employee";
+import LeaveBalances from "./pages/hr/LeaveBalances";
+import LeaveTypes from "./pages/hr/LeaveTypes";
+import Reports from "./pages/hr/Reports";
+
+import EmployeeDashboard from "./pages/employee/Dashboard";
+import Leaves from "./pages/employee/Leaves";
+import Profile from "./pages/employee/Profile";
+
+import Login from "./pages/public/Login";
+import LandingPage from "./pages/public/LandingPage"
+import CreateEmployee from "./pages/admin/CreateEmployee";
+import HrAccounts from "./pages/admin/HrAccounts";
+import Department from "./pages/admin/Department";
+import LeaveConfiguration from "./pages/admin/LeaveConfiguration";
+import Permissions from "./pages/admin/Permissions";
+import ActivityLogs from "./pages/admin/ActivityLogs";
+import Settings from "./pages/admin/Settings";
+
+function App() {
   return (
-    <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route element={<Navbar />}>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/leaves" element={<Leaves />} />
-        <Route path="/manage" element={<Manage />} />
-      </Route>
-    </Routes>
-  )
+    <BrowserRouter>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<LandingPage />}/>
+        <Route path="/login" element={<Login />} />
+
+        {/* Admin Routes */}
+        <Route element={<ProtectedRoutes allowedRoles={["admin"]} />}>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="employees" element={<EmployeeManagement />} />
+            <Route path="create-employee" element={<CreateEmployee />}/>
+            <Route path="hr-accounts" element={<HrAccounts />}/>
+            <Route path="departments" element={<Department />}/>
+            <Route path="leave-configuration" element={<LeaveConfiguration />}/>
+            <Route path="permissions" element={< Permissions />}/>
+            <Route path="activity-logs" element={<ActivityLogs />}/>
+            <Route path="settings" element={<Settings />}/>
+          </Route>
+        </Route>
+
+        {/* HR Routes */}
+        <Route element={<ProtectedRoutes allowedRoles={["hr"]} />}>
+          <Route path="/hr" element={<EmployeeHrLayout />}>
+            <Route path="dashboard" element={<HRDashboard />} />
+            <Route path="manage" element={<Manage />} />
+            <Route path="employees" element={<Employees />} />
+            <Route path="leave-balances" element={<LeaveBalances />} />
+            <Route path="leave-types" element={<LeaveTypes />} />
+            <Route path="reports" element={<Reports />} />
+          </Route>
+        </Route>
+
+        {/* Employee Routes */}
+        <Route element={<ProtectedRoutes allowedRoles={["employee"]} />}>
+          <Route path="/employee" element={<EmployeeHrLayout />}>
+            <Route path="dashboard" element={<EmployeeDashboard />} />
+            <Route path="leaves" element={<Leaves />} />
+            <Route path="profile" element={<Profile />} />
+          </Route>
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;

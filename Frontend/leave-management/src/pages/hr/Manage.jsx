@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 
-import SummaryCard from "../components/SummaryCard";
-import DetailItem from "../components/DetailItem";
-import BASE_URL from "../utils/constants";
+import SummaryCard from "../../components/common/SummaryCard";
+import DetailItem from "../../components/common/DetailItem"
+import BASE_URL from "../../utils/constants";
 
 import {
   FiSearch,
