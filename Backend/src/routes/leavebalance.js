@@ -1,5 +1,6 @@
-const express = require("express");
-const { pool } = require("../config/database");
+import express from "express";
+import { pool } from "../config/database.js";
+import authMiddleware from "../middleware/auth.js";
 
 const leaveBalanceRoute = express.Router();
 
@@ -48,11 +49,10 @@ leaveBalanceRoute.post("/createLeavebalance" , async (req , res) => {
     }
 });
 
-leaveBalanceRoute.get("/getLeavebalance/:id" , async (req , res)=> {
+leaveBalanceRoute.get("/getLeavebalance" , authMiddleware , async (req , res)=> {
     try {
-        const { id } = req.params;
-
-        if(!id) {
+        const  id  = req.user.id;
+        if(!id) {   
             return res.status(400).json({
                 message : "employee_id is needed",
             });
@@ -79,5 +79,47 @@ leaveBalanceRoute.get("/getLeavebalance/:id" , async (req , res)=> {
         
     }
 })
+leaveBalanceRoute.get("/getAllLeaveBalances", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT
+          elb.id,
+          elb.employee_id,
+          elb.leave_type_id,
+          elb.leave_year,
+          elb.allocated_days,
+          elb.used_days,
+          (elb.allocated_days - elb.used_days) AS available_days,
 
-module.exports = leaveBalanceRoute;
+          e.first_name,
+          e.last_name,
+          e.email,
+
+          lt.type AS leave_type
+
+       FROM employee_leave_balance elb
+
+       INNER JOIN employees e
+          ON elb.employee_id = e.id
+
+       INNER JOIN leave_type lt
+          ON elb.leave_type_id = lt.id
+
+       ORDER BY e.first_name ASC, lt.type ASC`
+    );
+
+    return res.status(200).json({
+      message: "Leave balances fetched successfully",
+      data: result.rows,
+    });
+
+  } catch (error) {
+    console.error("Get all leave balances error:", error);
+
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+});
+
+export default leaveBalanceRoute;

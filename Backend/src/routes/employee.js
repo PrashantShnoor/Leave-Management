@@ -1,53 +1,26 @@
-const express = require("express");
-const { pool } = require("../config/database");
-
+import express from "express";
+import { pool } from "../config/database.js";
+import authMiddleware from "../middleware/auth.js";
 const userRoutes = express.Router();
 
-userRoutes.post("/signup", async (req, res) => {
-  try {
-    const { first_name, last_name, email, password_hash } = req.body;
 
-    if (!first_name || !last_name || !email || !password_hash) {
-      return res.status(400).json({
-        message: "All fields are required",
+userRoutes.get("/getemployee", authMiddleware, async (req, res) => {
+  try {
+    const employeeId = req.user?.id;
+
+    if (!employeeId) {
+      return res.status(401).json({
+        message: "User authentication required",
       });
     }
 
     const query = `
-        INSERT INTO employees
-            (first_name , last_name , email , password_hash)
-        VALUES ($1 , $2 , $3 , $4)
-        RETURNING id , first_name , last_name , email , role , created_at
-        `;
+      SELECT id, first_name, last_name, email, role, created_at
+      FROM employees
+      WHERE id = $1
+    `;
 
-    const values = [first_name, last_name, email, password_hash];
-    const result = await pool.query(query, values);
-
-    console.log("Employee inserted successfully:");
-
-    return res.status(201).json({
-      message: "Employee inserted successfully",
-      employee: result.rows[0],
-    });
-  } catch (error) {
-    console.error("Error inserting employee:", error.message);
-  }
-});
-
-userRoutes.get("/getemployee", async (req, res) => {
-  try {
-    const { email } = req.body;
-    if (!email || !email.trim()) {
-      return res.status(400).json({
-        message: "Please fill valid email",
-      });
-    }
-
-    const query = `
-        SELECT * FROM employees WHERE LOWER(email) = LOWER($1)
-        `;
-    const value = [email.trim()];
-    const result = await pool.query(query, value);
+    const result = await pool.query(query, [employeeId]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({
@@ -55,12 +28,17 @@ userRoutes.get("/getemployee", async (req, res) => {
       });
     }
 
-    return res.status(201).json({
-      message: "Employee found",
-      result: result.rows,
+    return res.status(200).json({
+      message: "Employee found successfully",
+      data: result.rows[0],
     });
+
   } catch (error) {
-    console.error("Error in finding employee :", error.message);
+    console.error("Error in finding employee:", error.message);
+
+    return res.status(500).json({
+      message: "Internal server error",
+    });
   }
 });
 
@@ -147,4 +125,5 @@ userRoutes.delete("/deleteEmployee/:id", async (req, res) => {
   }
   
 });
-module.exports = userRoutes;
+
+export default userRoutes;

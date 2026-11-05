@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import LeaveBalanceDetails from "../components/LeaveBalanceDetails";
+import LeaveBalanceDetails from "../../components/employee/LeaveBalanceDetails";
 import {
   FiActivity,
   FiCalendar,
@@ -13,7 +13,7 @@ import {
   FiX,
 } from "react-icons/fi";
 
-import BASE_URL from "../utils/constants";
+import BASE_URL from "../../utils/constants";
 
 const EMPLOYEE_ID = 6;
 
@@ -102,11 +102,11 @@ const Leaves = () => {
       setPageError("");
 
       const [historyResponse, balanceResponse] = await Promise.all([
-        axios.get(`${BASE_URL}/getLeaveRequests/${EMPLOYEE_ID}`,
+        axios.get(`${BASE_URL}/getLeaveRequests`,
           { withCredentials: true }
         ),
 
-        axios.get(`${BASE_URL}/getLeavebalance/${EMPLOYEE_ID}`,
+        axios.get(`${BASE_URL}/getLeavebalance`,
           { withCredentials: true }
         ),
       ]);
@@ -222,7 +222,6 @@ const Leaves = () => {
       setSubmitting(true);
 
       const payload = {
-        employee_id: EMPLOYEE_ID,
         leave_type_id: leaveTypeIds[formData.type],
         start_date: formData.from,
         end_date: formData.to,

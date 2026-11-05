@@ -1,28 +1,34 @@
-require("dotenv").config();
-const express = require("express");
-const { pool, connectDB } = require("./config/database");
+import express from "express";
+import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
+import cors from "cors";
+
+import { connectDB } from "./config/database.js";
+
+import authRoutes from "./routes/auth.js";
+import userRoutes from "./routes/employee.js";
+import requestRoutes from "./routes/request.js";
+import leaveTypeRoutes from "./routes/leavetype.js";
+import leaveBalanceRoute from "./routes/leavebalance.js";
+
+dotenv.config();
 
 const app = express();
-const cors = require('cors');
-
-
-
-const userRoutes = require("./routes/employee");
-const requestRoutes = require("./routes/request");
-const leaveTypeRoutes = require("./routes/leavetype");
-const leaveBalanceRoute = require("./routes/leavebalance");
-
 
 app.use(cors({
   origin: "http://localhost:5173",
   credentials: true,
 }));
-app.use(express.json());
 
-app.use("/" , userRoutes);
-app.use("/" , requestRoutes);
-app.use("/" , leaveTypeRoutes);
-app.use("/" , leaveBalanceRoute);
+app.use(express.json());
+app.use(cookieParser());
+
+// Routes
+app.use("/", authRoutes);
+app.use("/", userRoutes);
+app.use("/", requestRoutes);
+app.use("/", leaveTypeRoutes);
+app.use("/", leaveBalanceRoute);
 
 connectDB()
   .then(() => {
