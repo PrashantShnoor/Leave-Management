@@ -94,14 +94,7 @@ const HRAccountForm = ({ onSubmit, onCancel }) => {
           </div>
 
           <div className="flex justify-end gap-3 pt-3">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="btn btn-ghost"
-            >
-              Cancel
-            </button>
-
+            <button type="button" onClick={onCancel} className="btn btn-ghost" > Cancel </button>
             <button type="submit" className="btn bg-green-700 text-white hover:bg-green-800">
               Create HR Account
             </button>

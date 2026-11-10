@@ -1,4 +1,3 @@
-
 import React from "react";
 
 const EmployeeDetails = ({ employee, onClose }) => {
@@ -26,14 +25,8 @@ const EmployeeDetails = ({ employee, onClose }) => {
             </p>
           </div>
 
-          <button
-            onClick={onClose}
-            className="btn btn-sm btn-ghost text-gray-500"
-          >
-            ✕
-          </button>
+          <button onClick={onClose} className="btn btn-sm btn-ghost text-gray-500" >✕</button>
         </div>
-
         <div className="flex items-center gap-4 mt-4">
           <div className="avatar placeholder">
             <div className="bg-green-100 text-green-800 rounded-full w-14">

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
@@ -6,11 +5,7 @@ import {
   FiUsers,
   FiUserPlus,
   FiBriefcase,
-  FiLayers,
   FiCalendar,
-  FiShield,
-  FiActivity,
-  FiSettings,
   FiMenu,
   FiX,
   FiLogOut,
@@ -53,40 +48,15 @@ const AdminLayout = () => {
           path: "/admin/hr-accounts",
           icon: FiBriefcase,
         },
-        {
-          name: "Departments",
-          path: "/admin/departments",
-          icon: FiLayers,
-        },
       ],
     },
     {
-      title: "CONFIGURATION",
+      title: "LEAVES",
       items: [
         {
-          name: "Leave Configuration",
-          path: "/admin/leave-configuration",
+          name: "Leaves Requests",
+          path: "/admin/leaveRequests",
           icon: FiCalendar,
-        },
-        {
-          name: "Roles & Permissions",
-          path: "/admin/permissions",
-          icon: FiShield,
-        },
-      ],
-    },
-    {
-      title: "SYSTEM",
-      items: [
-        {
-          name: "Activity Logs",
-          path: "/admin/activity-logs",
-          icon: FiActivity,
-        },
-        {
-          name: "Settings",
-          path: "/admin/settings",
-          icon: FiSettings,
         },
       ],
     },
@@ -103,8 +73,6 @@ const AdminLayout = () => {
 
   return (
     <div className="min-h-screen bg-base-200 lg:flex">
-
-      {/* Mobile Overlay */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/40 lg:hidden"
@@ -112,7 +80,6 @@ const AdminLayout = () => {
         />
       )}
 
-      {/* Sidebar */}
       <aside
         className={`
           fixed inset-y-0 left-0 z-50 flex w-72 flex-col
@@ -120,13 +87,10 @@ const AdminLayout = () => {
           transition-transform duration-300
           lg:sticky lg:top-0 lg:h-screen lg:translate-x-0
           ${
-            sidebarOpen
-              ? "translate-x-0"
-              : "-translate-x-full lg:translate-x-0"
+            sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
           }
         `}
       >
-        {/* Logo */}
         <div className="flex h-20 items-center justify-between border-b border-base-300 px-6">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-success/10 text-success">
@@ -137,9 +101,7 @@ const AdminLayout = () => {
               <h1 className="text-lg font-bold text-base-content">
                 Leave<span className="text-success">Flow</span>
               </h1>
-              <p className="text-xs text-base-content/50">
-                Administration
-              </p>
+              <p className="text-xs text-base-content/50">Administration</p>
             </div>
           </div>
 
@@ -151,7 +113,6 @@ const AdminLayout = () => {
           </button>
         </div>
 
-        {/* Navigation */}
         <nav className="flex-1 space-y-6 overflow-y-auto px-4 py-6">
           {navigationGroups.map((group) => (
             <div key={group.title}>
@@ -187,7 +148,6 @@ const AdminLayout = () => {
           ))}
         </nav>
 
-        {/* Sidebar Bottom */}
         <div className="border-t border-base-300 p-4">
           <div className="mb-3 flex items-center gap-3 rounded-xl bg-base-200 p-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-success/10 text-success">
@@ -214,53 +174,7 @@ const AdminLayout = () => {
         </div>
       </aside>
 
-      {/* Main Section */}
       <div className="min-w-0 flex-1">
-
-        {/* Top Navbar */}
-        <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-base-300 bg-base-100 px-4 sm:px-6 lg:px-8">
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="btn btn-ghost btn-square lg:hidden"
-            >
-              <FiMenu size={22} />
-            </button>
-
-            <div>
-              <h2 className="text-lg font-bold text-base-content sm:text-xl">
-                Admin Panel
-              </h2>
-              <p className="hidden text-xs text-base-content/50 sm:block">
-                Manage your organization's leave system
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button className="btn btn-ghost btn-circle btn-sm">
-              <FiBell size={19} />
-            </button>
-
-            <div className="hidden items-center gap-2 border-l border-base-300 pl-4 sm:flex">
-              <div className="text-right">
-                <p className="text-sm font-semibold text-base-content">
-                  {adminName}
-                </p>
-                <p className="text-xs text-base-content/50">
-                  Administrator
-                </p>
-              </div>
-
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-success/10 font-bold text-success">
-                {adminName.charAt(0).toUpperCase()}
-              </div>
-            </div>
-          </div>
-        </header>
-
-        {/* Page Content */}
         <main className="p-4 sm:p-6 lg:p-8">
           <Outlet />
         </main>

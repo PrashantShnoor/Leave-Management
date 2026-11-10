@@ -79,30 +79,22 @@ const CreateEmployee = () => {
         <div className="alert border border-green-200 bg-green-50 text-green-800">
           <span>{successMessage}</span>
 
-          <button
-            className="btn btn-ghost btn-xs"
-            onClick={() => setSuccessMessage("")}
-          >
+          <button className="btn btn-ghost btn-xs" onClick={() => setSuccessMessage("")} >
             ✕
           </button>
         </div>
       )}
 
-      {/* Error Message */}
       {errorMessage && (
         <div className="alert border border-red-200 bg-red-50 text-red-800">
           <span>{errorMessage}</span>
 
-          <button
-            className="btn btn-ghost btn-xs"
-            onClick={() => setErrorMessage("")}
-          >
+          <button className="btn btn-ghost btn-xs" onClick={() => setErrorMessage("")} >
             ✕
           </button>
         </div>
       )}
 
-      {/* Employee Form */}
       <EmployeeForm
         onSubmit={handleCreateEmployee}
         onCancel={() => navigate("/admin/employees")}
@@ -115,7 +107,6 @@ const CreateEmployee = () => {
         </div>
       )}
 
-      {/* Information */}
       <div className="rounded-xl border border-green-100 bg-green-50 p-4">
         <div className="flex items-start gap-3">
           <FiUserPlus

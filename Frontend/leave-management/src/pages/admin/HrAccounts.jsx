@@ -20,7 +20,6 @@ const HrAccounts = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  // Fetch HR accounts from the backend
   const fetchHrAccounts = async () => {
     try {
       setLoading(true);
@@ -53,7 +52,6 @@ const HrAccounts = () => {
     fetchHrAccounts();
   }, []);
 
-  // Search HR accounts
   const filteredAccounts = useMemo(() => {
     const searchValue = search.toLowerCase().trim();
 
@@ -68,7 +66,6 @@ const HrAccounts = () => {
     });
   }, [hrAccounts, search]);
 
-  // Create a new HR account
   const handleCreateAccount = async (accountData) => {
     try {
       setCreating(true);
@@ -94,7 +91,6 @@ const HrAccounts = () => {
 
       setShowForm(false);
 
-      // Fetch the updated records from PostgreSQL
       await fetchHrAccounts();
     } catch (error) {
       console.error(
@@ -139,7 +135,6 @@ const HrAccounts = () => {
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-green-900">
@@ -163,7 +158,6 @@ const HrAccounts = () => {
         </button>
       </div>
 
-      {/* Messages */}
       {successMessage && (
         <div className="alert border border-green-200 bg-green-50 text-green-800">
           {successMessage}
@@ -176,22 +170,12 @@ const HrAccounts = () => {
         </div>
       )}
 
-      {/* Summary */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <SummaryCard
-          title="Total HR Accounts"
-          count={loading ? "-" : hrAccounts.length}
-          icon={<FiBriefcase size={20} />}
-          color="green"
-        />
+        <SummaryCard title="Total HR Accounts" count={loading ? "-" : hrAccounts.length} icon={<FiBriefcase size={20} />} color="green" />
       </div>
 
-      {/* Create HR Form */}
       {showForm && (
-        <HRAccountForm
-          onSubmit={handleCreateAccount}
-          onCancel={() => setShowForm(false)}
-        />
+        <HRAccountForm onSubmit={handleCreateAccount} onCancel={() => setShowForm(false)} />
       )}
 
       {creating && (
@@ -201,7 +185,6 @@ const HrAccounts = () => {
         </div>
       )}
 
-      {/* Search */}
       <div className="relative max-w-md">
         <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
 
@@ -214,7 +197,6 @@ const HrAccounts = () => {
         />
       </div>
 
-      {/* HR Accounts Table */}
       <section className="space-y-3">
         <h2 className="font-semibold text-gray-800">
           HR Account Records

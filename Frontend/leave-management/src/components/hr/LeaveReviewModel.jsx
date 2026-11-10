@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 
 const LeaveReviewModal = ({
@@ -38,7 +37,6 @@ const LeaveReviewModal = ({
 
       <div className="bg-white rounded-xl shadow-lg w-full max-w-md p-6">
 
-        {/* Header */}
         <h2 className="text-xl font-bold text-green-800">
           {isReject ? "Reject Leave Request" : "Approve Leave Request"}
         </h2>
@@ -60,7 +58,6 @@ const LeaveReviewModal = ({
           </div>
         )}
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="mt-5">
 
           <label className="label font-semibold">
@@ -81,14 +78,9 @@ const LeaveReviewModal = ({
             required={isReject}
           />
 
-          {/* Buttons */}
           <div className="flex justify-end gap-3 mt-6">
 
-            <button
-              type="button"
-              onClick={onCancel}
-              className="btn btn-ghost"
-            >
+            <button type="button" onClick={onCancel} className="btn btn-ghost" >
               Cancel
             </button>
 
@@ -106,7 +98,6 @@ const LeaveReviewModal = ({
 
           </div>
         </form>
-
       </div>
     </div>
   );

@@ -1,4 +1,3 @@
-
 import React from "react";
 import StatusBadge from "../common/StatusBadge";
 
@@ -6,7 +5,6 @@ const LeaveHistoryTable = ({ leaves = [], onViewDetails }) => {
   return (
     <div className="bg-white rounded-xl border border-green-100 shadow-sm p-5">
 
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-5">
         <div>
           <h2 className="text-xl font-bold text-green-800">

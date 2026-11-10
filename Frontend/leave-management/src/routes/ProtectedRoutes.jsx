@@ -4,7 +4,6 @@ import { Navigate, Outlet } from "react-router-dom";
 const ProtectedRoutes = ({ allowedRoles = [] }) => {
   const storedUser = sessionStorage.getItem("user");
 
-  // Check whether user is logged in
   if (!storedUser) {
     return <Navigate to="/login" replace />;
   }

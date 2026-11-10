@@ -22,11 +22,8 @@ import Login from "./pages/public/Login";
 import LandingPage from "./pages/public/LandingPage"
 import CreateEmployee from "./pages/admin/CreateEmployee";
 import HrAccounts from "./pages/admin/HrAccounts";
-import Department from "./pages/admin/Department";
-import LeaveConfiguration from "./pages/admin/LeaveConfiguration";
-import Permissions from "./pages/admin/Permissions";
-import ActivityLogs from "./pages/admin/ActivityLogs";
-import Settings from "./pages/admin/Settings";
+import LeaveRequests from "./pages/admin/LeaveRequests";
+
 
 function App() {
   return (
@@ -43,11 +40,7 @@ function App() {
             <Route path="employees" element={<EmployeeManagement />} />
             <Route path="create-employee" element={<CreateEmployee />}/>
             <Route path="hr-accounts" element={<HrAccounts />}/>
-            <Route path="departments" element={<Department />}/>
-            <Route path="leave-configuration" element={<LeaveConfiguration />}/>
-            <Route path="permissions" element={< Permissions />}/>
-            <Route path="activity-logs" element={<ActivityLogs />}/>
-            <Route path="settings" element={<Settings />}/>
+            <Route path="leaveRequests" element={<LeaveRequests />}/>
           </Route>
         </Route>
 
