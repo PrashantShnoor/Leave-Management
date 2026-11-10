@@ -4,7 +4,6 @@ import axios from "axios";
 import {
   FiUsers,
   FiUserCheck,
-  FiBriefcase,
   FiCalendar,
   FiClock,
   FiCheckCircle,
@@ -13,7 +12,6 @@ import {
 } from "react-icons/fi";
 
 import SummaryCard from "../../components/common/SummaryCard";
-import DataTable from "../../components/common/DataTable";
 import BASE_URL  from "../../utils/constants";
 
 const AdminDashboard = () => {
@@ -80,12 +78,6 @@ const AdminDashboard = () => {
       color: "blue",
     },
     {
-      title: "Departments",
-      count: organization.departments,
-      icon: <FiBriefcase size={20} />,
-      color: "orange",
-    },
-    {
       title: "Leave Requests",
       count: organization.leaveRequests,
       icon: <FiCalendar size={20} />,
@@ -144,10 +136,7 @@ const AdminDashboard = () => {
       <div className="rounded-xl border border-red-200 bg-red-50 p-5">
         <p className="font-medium text-red-700">{error}</p>
 
-        <button
-          onClick={fetchDashboardData}
-          className="btn btn-sm mt-3 bg-green-700 text-white hover:bg-green-800"
-        >
+        <button onClick={fetchDashboardData} className="btn btn-sm mt-3 bg-green-700 text-white hover:bg-green-800" >
           Retry
         </button>
       </div>
@@ -156,17 +145,33 @@ const AdminDashboard = () => {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-green-900">
-          Admin Dashboard
-        </h1>
+      
+       <div className="relative overflow-hidden rounded-2xl bg-linear-to-r from-green-500 to-emerald-300 p-5  text-white shadow-sm sm:p-8">
+          <div className="relative z-10">
+            
 
-        <p className="mt-1 text-sm text-gray-500">
-          Overview of your organization's leave management system.
-        </p>
-      </div>
+            <h1 className=" text-2xl font-bold sm:text-3xl">
+              Welcome back, Admin!
+            </h1>
 
-      {/* Organization Overview */}
+            <p className="mt-2 max-w-xl text-sm text-green-50 sm:text-base">
+              Manage your employees, monitor leave requests, configure leave
+              policies .
+            </p>
+
+            <p className="mt-4 text-xs font-medium text-green-100">
+              {new Date().toLocaleDateString("en-IN", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })}
+            </p>
+          </div>
+
+          <div className="absolute -right-10 -top-16 h-56 w-56 rounded-full bg-white/10" />
+          <div className="absolute -bottom-24 right-24 h-48 w-48 rounded-full bg-white/10" />
+        </div>
       <section>
         <h2 className="mb-4 text-lg font-semibold text-gray-800">
           Organization Overview
@@ -179,7 +184,7 @@ const AdminDashboard = () => {
         </div>
       </section>
 
-      {/* Leave Overview */}
+
       <section>
         <h2 className="mb-4 text-lg font-semibold text-gray-800">
           Leave Overview
@@ -192,7 +197,6 @@ const AdminDashboard = () => {
         </div>
       </section>
 
-      {/* Recent Activities */}
       <section className="space-y-4">
         <div className="flex items-center gap-2">
           <FiActivity className="text-green-700" size={20} />
@@ -204,8 +208,6 @@ const AdminDashboard = () => {
 
         
       </section>
-
-      {/* System Overview */}
       <div className="rounded-xl border border-green-100 bg-green-50 p-5">
         <h3 className="font-semibold text-green-900">
           System Overview

@@ -130,7 +130,8 @@ requestRoutes.get("/getAllEmployees", async (req, res) => {
           first_name,
           last_name,
           email,
-          role
+          role,
+          created_at
        FROM employees
        WHERE LOWER(role) = 'employee'
        ORDER BY first_name ASC`

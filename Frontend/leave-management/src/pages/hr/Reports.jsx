@@ -1,102 +1,144 @@
-import React, { useMemo, useState } from "react";
-import { FiDownload, FiFileText, FiCheckCircle, FiClock } from "react-icons/fi";
+
+import React, { useEffect, useMemo, useState } from "react";
+import axios from "axios";
+
+import {
+  FiDownload,
+  FiFileText,
+  FiCheckCircle,
+  FiClock,
+} from "react-icons/fi";
+
+import BASE_URL from "../../utils/constants";
 
 const Reports = () => {
+  const [leaveRecords, setLeaveRecords] = useState([]);
   const [status, setStatus] = useState("All");
   const [search, setSearch] = useState("");
 
-  const leaveRecords = [
-    {
-      id: 1,
-      employee: "Rahul Sharma",
-      department: "Engineering",
-      leaveType: "Casual Leave",
-      from: "2026-11-10",
-      to: "2026-11-12",
-      days: 3,
-      status: "Pending",
-    },
-    {
-      id: 2,
-      employee: "Priya Singh",
-      department: "Human Resources",
-      leaveType: "Sick Leave",
-      from: "2026-11-08",
-      to: "2026-11-09",
-      days: 2,
-      status: "Approved",
-    },
-    {
-      id: 3,
-      employee: "Amit Kumar",
-      department: "Finance",
-      leaveType: "Annual Leave",
-      from: "2026-10-15",
-      to: "2026-10-19",
-      days: 5,
-      status: "Approved",
-    },
-    {
-      id: 4,
-      employee: "Neha Verma",
-      department: "Marketing",
-      leaveType: "Casual Leave",
-      from: "2026-11-05",
-      to: "2026-11-05",
-      days: 1,
-      status: "Rejected",
-    },
-    {
-      id: 5,
-      employee: "Rohit Gupta",
-      department: "Engineering",
-      leaveType: "Sick Leave",
-      from: "2026-10-20",
-      to: "2026-10-21",
-      days: 2,
-      status: "Approved",
-    },
-  ];
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const filteredRecords = useMemo(() => {
-    return leaveRecords.filter((record) => {
-      const matchesStatus =
-        status === "All" || record.status === status;
+  // Leave type ID mapping from your database
+  const leaveTypeNames = {
+    1: "Annual Leave",
+    2: "Sick Leave",
+    3: "Casual Leave",
+    4: "Leave Without Pay",
+  };
 
-      const matchesSearch =
-        record.employee.toLowerCase().includes(search.toLowerCase()) ||
-        record.department.toLowerCase().includes(search.toLowerCase()) ||
-        record.leaveType.toLowerCase().includes(search.toLowerCase());
+  // Fetch all leave requests
+  const fetchLeaveRecords = async () => {
+    try {
+      setLoading(true);
+      setError("");
 
-      return matchesStatus && matchesSearch;
-    });
-  }, [status, search]);
+      const response = await axios.get(
+        `${BASE_URL}/getAllrequest`
+      );
 
-  const approvedCount = filteredRecords.filter(
-    (record) => record.status === "Approved"
-  ).length;
+      const requests = response.data.leave_requests || [];
 
-  const pendingCount = filteredRecords.filter(
-    (record) => record.status === "Pending"
-  ).length;
+      setLeaveRecords(requests);
+    } catch (error) {
+      console.error("Fetch Leave Reports Error:", error);
 
-  const totalDays = filteredRecords.reduce(
-    (total, record) => total + record.days,
-    0
-  );
+      setError(
+        error.response?.data?.message ||
+          "Unable to fetch leave reports."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
+    fetchLeaveRecords();
+  }, []);
+
+  // Format backend status
+  const formatStatus = (value) => {
+    if (!value) return "Unknown";
+
+    return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+  };
+
+  // Format date without changing the calendar day
   const formatDate = (date) => {
-    return new Date(`${date}T00:00:00`).toLocaleDateString("en-IN", {
+    if (!date) return "N/A";
+
+    const dateValue = String(date).slice(0, 10);
+    const parsedDate = new Date(`${dateValue}T00:00:00`);
+
+    if (Number.isNaN(parsedDate.getTime())) return "N/A";
+
+    return parsedDate.toLocaleDateString("en-IN", {
       day: "2-digit",
       month: "short",
       year: "numeric",
     });
   };
 
+  // Summary calculations using ALL requests
+  const totalRequests = leaveRecords.length;
+
+  const approvedCount = leaveRecords.filter(
+    (record) => record.status?.toLowerCase() === "approved"
+  ).length;
+
+  const pendingCount = leaveRecords.filter(
+    (record) => record.status?.toLowerCase() === "pending"
+  ).length;
+
+  // Search and filter leave requests
+  const filteredRecords = useMemo(() => {
+    const searchValue = search.trim().toLowerCase();
+
+    return leaveRecords.filter((record) => {
+      const recordStatus = formatStatus(record.status);
+
+      const matchesStatus =
+        status === "All" || recordStatus === status;
+
+      const employeeName = (record.employee_name || "").toLowerCase();
+      const employeeEmail = (record.employee_email || "").toLowerCase();
+
+      const leaveType =
+        (
+          leaveTypeNames[record.leave_type_id] ||
+          `Leave Type #${record.leave_type_id}`
+        ).toLowerCase();
+
+      const matchesSearch =
+        employeeName.includes(searchValue) ||
+        employeeEmail.includes(searchValue) ||
+        leaveType.includes(searchValue) ||
+        String(record.employee_id || "").includes(searchValue);
+
+      return matchesStatus && matchesSearch;
+    });
+  }, [leaveRecords, search, status]);
+
+  // Show only the 7 most recent requests
+  // Backend already orders requests by created_at DESC
+  const recentRecords = filteredRecords.slice(0, 7);
+
+  // Calculate total leave days in the displayed records
+  const totalDays = recentRecords.reduce(
+    (total, record) => total + Number(record.requested_days || 0),
+    0
+  );
+
+  // Export filtered records as CSV
   const exportCSV = () => {
+    if (filteredRecords.length === 0) {
+      alert("No leave records available to export.");
+      return;
+    }
+
     const headers = [
       "Employee",
-      "Department",
+      "Employee Email",
       "Leave Type",
       "From",
       "To",
@@ -105,19 +147,17 @@ const Reports = () => {
     ];
 
     const rows = filteredRecords.map((record) => [
-      record.employee,
-      record.department,
-      record.leaveType,
-      record.from,
-      record.to,
-      record.days,
-      record.status,
+      record.employee_name || "N/A",
+      record.employee_email || "N/A",
+      leaveTypeNames[record.leave_type_id] ||
+        `Leave Type #${record.leave_type_id}`,
+      formatDate(record.start_date),
+      formatDate(record.end_date),
+      Number(record.requested_days || 0),
+      formatStatus(record.status),
     ]);
 
-    const csvContent = [
-      headers,
-      ...rows,
-    ]
+    const csvContent = [headers, ...rows]
       .map((row) =>
         row
           .map((value) => `"${String(value).replace(/"/g, '""')}"`)
@@ -125,7 +165,7 @@ const Reports = () => {
       )
       .join("\n");
 
-    const blob = new Blob([csvContent], {
+    const blob = new Blob(["\uFEFF" + csvContent], {
       type: "text/csv;charset=utf-8;",
     });
 
@@ -139,18 +179,39 @@ const Reports = () => {
     URL.revokeObjectURL(url);
   };
 
+  // Status badge styling
   const getStatusClass = (value) => {
-    if (value === "Approved") return "bg-green-100 text-green-700";
-    if (value === "Pending") return "bg-yellow-100 text-yellow-700";
-    if (value === "Rejected") return "bg-red-100 text-red-700";
+    const normalizedStatus = value?.toLowerCase();
+
+    if (normalizedStatus === "approved") {
+      return "bg-green-100 text-green-700";
+    }
+
+    if (normalizedStatus === "pending") {
+      return "bg-yellow-100 text-yellow-700";
+    }
+
+    if (normalizedStatus === "rejected") {
+      return "bg-red-100 text-red-700";
+    }
+
+    if (normalizedStatus === "cancelled") {
+      return "bg-gray-100 text-gray-700";
+    }
+
     return "bg-gray-100 text-gray-700";
   };
 
   return (
     <div className="space-y-6">
+
+      {/* Page Heading */}
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Leave Reports</h1>
+          <h1 className="text-2xl font-bold text-gray-800">
+            Leave Reports
+          </h1>
+
           <p className="mt-1 text-sm text-gray-500">
             Review employee leave history and generate reports.
           </p>
@@ -158,55 +219,89 @@ const Reports = () => {
 
         <button
           onClick={exportCSV}
-          className="btn border-none bg-green-600 text-white hover:bg-green-700"
+          disabled={loading || leaveRecords.length === 0}
+          className="btn border-none bg-green-600 text-white hover:bg-green-700 disabled:bg-gray-300"
         >
-          <FiDownload /> Export CSV
+          <FiDownload />
+          Export CSV
         </button>
       </div>
 
+      {/* Summary Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+
+        {/* Total Requests */}
         <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Total Requests</p>
+              <p className="text-sm text-gray-500">
+                Total Requests
+              </p>
+
               <h2 className="mt-2 text-2xl font-bold text-gray-800">
-                {filteredRecords.length}
+                {loading ? "..." : totalRequests}
               </h2>
             </div>
+
             <FiFileText className="text-2xl text-blue-600" />
           </div>
         </div>
 
+        {/* Approved Requests */}
         <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Approved Requests</p>
+              <p className="text-sm text-gray-500">
+                Approved Requests
+              </p>
+
               <h2 className="mt-2 text-2xl font-bold text-green-600">
-                {approvedCount}
+                {loading ? "..." : approvedCount}
               </h2>
             </div>
+
             <FiCheckCircle className="text-2xl text-green-600" />
           </div>
         </div>
 
+        {/* Pending Requests */}
         <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Pending Requests</p>
+              <p className="text-sm text-gray-500">
+                Pending Requests
+              </p>
+
               <h2 className="mt-2 text-2xl font-bold text-yellow-600">
-                {pendingCount}
+                {loading ? "..." : pendingCount}
               </h2>
             </div>
+
             <FiClock className="text-2xl text-yellow-600" />
           </div>
         </div>
+
       </div>
 
+      {/* Reports Table */}
       <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+
+        <div className="mb-5">
+          <h2 className="font-semibold text-gray-800">
+            Recent Leave Requests
+          </h2>
+
+          <p className="mt-1 text-sm text-gray-500">
+            Showing up to 7 recent leave requests.
+          </p>
+        </div>
+
+        {/* Search and Filter */}
         <div className="mb-5 flex flex-col gap-3 md:flex-row">
+
           <input
             type="text"
-            placeholder="Search employee, department or leave type..."
+            placeholder="Search employee, email or leave type..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="input input-bordered flex-1"
@@ -221,62 +316,113 @@ const Reports = () => {
             <option value="Pending">Pending</option>
             <option value="Approved">Approved</option>
             <option value="Rejected">Rejected</option>
+            <option value="Cancelled">Cancelled</option>
           </select>
         </div>
 
+        {/* Total Days */}
         <div className="mb-5 rounded-lg bg-green-50 p-4">
           <p className="text-sm text-green-800">
-            <span className="font-semibold">{totalDays} leave days</span> are
-            represented in the currently filtered records.
+            <span className="font-semibold">
+              {totalDays} leave days
+            </span>{" "}
+            are represented in the currently displayed records.
           </p>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="table">
-            <thead>
-              <tr className="text-gray-500">
-                <th>Employee</th>
-                <th>Department</th>
-                <th>Leave Type</th>
-                <th>From</th>
-                <th>To</th>
-                <th>Days</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredRecords.map((record) => (
-                <tr key={record.id}>
-                  <td className="font-medium text-gray-800">
-                    {record.employee}
-                  </td>
-                  <td>{record.department}</td>
-                  <td>{record.leaveType}</td>
-                  <td>{formatDate(record.from)}</td>
-                  <td>{formatDate(record.to)}</td>
-                  <td>{record.days}</td>
-                  <td>
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusClass(
-                        record.status
-                      )}`}
-                    >
-                      {record.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+        {/* Loading */}
+        {loading && (
+          <div className="flex justify-center py-12">
+            <span className="loading loading-spinner loading-lg text-green-600"></span>
+          </div>
+        )}
 
-              {filteredRecords.length === 0 && (
-                <tr>
-                  <td colSpan="7" className="py-8 text-center text-gray-500">
-                    No leave records found.
-                  </td>
+        {/* Error */}
+        {!loading && error && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+            <p className="text-sm text-red-600">{error}</p>
+
+            <button
+              onClick={fetchLeaveRecords}
+              className="btn btn-sm mt-3 bg-green-600 text-white hover:bg-green-700"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+        {/* Table */}
+        {!loading && !error && (
+          <div className="overflow-x-auto">
+            <table className="table">
+              <thead>
+                <tr className="text-gray-500">
+                  <th>Employee</th>
+                  <th>Leave Type</th>
+                  <th>From</th>
+                  <th>To</th>
+                  <th>Days</th>
+                  <th>Status</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+
+              <tbody>
+                {recentRecords.map((record) => {
+                  const recordStatus = formatStatus(record.status);
+
+                  return (
+                    <tr key={record.id}>
+                      <td>
+                        <p className="font-medium text-gray-800">
+                          {record.employee_name || "N/A"}
+                        </p>
+
+                        <p className="text-xs text-gray-500">
+                          {record.employee_email || "N/A"}
+                        </p>
+                      </td>
+
+                      <td>
+                        {leaveTypeNames[record.leave_type_id] ||
+                          `Leave Type #${record.leave_type_id}`}
+                      </td>
+
+                      <td>{formatDate(record.start_date)}</td>
+
+                      <td>{formatDate(record.end_date)}</td>
+
+                      <td>
+                        {Number(record.requested_days || 0)}
+                      </td>
+
+                      <td>
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusClass(
+                            record.status
+                          )}`}
+                        >
+                          {recordStatus}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+
+                {recentRecords.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan="6"
+                      className="py-8 text-center text-gray-500"
+                    >
+                      No leave records found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
       </div>
     </div>
   );

@@ -9,11 +9,9 @@ import BASE_URL from "../utils/constants";
 const EmployeeHrLayout = () => {
   const navigate = useNavigate();
 
-  // Get logged-in user
   const user = JSON.parse(sessionStorage.getItem("user") || "{}");
   const role = user.role?.toLowerCase();
 
-  // Employee sidebar links
   const employeeLinks = [
     {
       name: "Dashboard",
@@ -32,7 +30,6 @@ const EmployeeHrLayout = () => {
     },
   ];
 
-  // HR sidebar links
   const hrLinks = [
     {
       name: "Dashboard",
@@ -66,7 +63,6 @@ const EmployeeHrLayout = () => {
     },
   ];
 
-  // Select links according to role
   const navLinks = role === "hr" ? hrLinks : employeeLinks;
 
   const handleLogout = async () => {
@@ -86,21 +82,12 @@ const EmployeeHrLayout = () => {
 
   return (
     <div className="drawer lg:drawer-open">
-      <input
-        id="my-drawer-4"
-        type="checkbox"
-        className="drawer-toggle"
-      />
+      <input id="my-drawer-4" type="checkbox" className="drawer-toggle" />
 
-      {/* Main content */}
       <div className="drawer-content">
         <nav className="navbar flex justify-between w-full bg-green-50">
           <div className="flex items-center">
-            <label
-              htmlFor="my-drawer-4"
-              aria-label="open sidebar"
-              className="btn btn-square btn-ghost drawer-button"
-            >
+            <label htmlFor="my-drawer-4" aria-label="open sidebar" className="btn btn-square btn-ghost drawer-button" >
               <FaCalendarDay className="size-7 text-green-600" />
             </label>
 
@@ -114,10 +101,7 @@ const EmployeeHrLayout = () => {
               {user.first_name} ({role?.toUpperCase()})
             </span>
 
-            <button
-              onClick={handleLogout}
-              className="btn btn-soft btn-secondary"
-            >
+            <button onClick={handleLogout} className="btn btn-soft btn-secondary" >
               Logout
             </button>
           </div>
@@ -128,13 +112,8 @@ const EmployeeHrLayout = () => {
         </div>
       </div>
 
-      {/* Sidebar */}
       <div className="drawer-side is-drawer-close:overflow-visible">
-        <label
-          htmlFor="my-drawer-4"
-          aria-label="close sidebar"
-          className="drawer-overlay"
-        ></label>
+        <label htmlFor="my-drawer-4" aria-label="close sidebar" className="drawer-overlay" ></label>
 
         <div className="flex min-h-full flex-col items-start bg-green-50 is-drawer-close:w-16 is-drawer-open:w-64">
           <ul className="menu w-full grow gap-2">

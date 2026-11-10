@@ -1,4 +1,3 @@
-
 import React from "react";
 
 const DataTable = ({
@@ -52,7 +51,6 @@ const DataTable = ({
             </tr>
           )}
         </tbody>
-
       </table>
     </div>
   );

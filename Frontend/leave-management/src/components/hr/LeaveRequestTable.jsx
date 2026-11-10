@@ -1,15 +1,10 @@
-
 import React from "react";
 import StatusBadge from "../common/StatusBadge";
 
-const LeaveRequestTable = ({
-  leaves = [],
-  onSelectLeave,
-}) => {
+const LeaveRequestTable = ({ leaves = [], onSelectLeave,}) => {
   return (
     <div className="bg-white rounded-xl border border-green-100 shadow-sm p-5">
 
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-5">
         <div>
           <h2 className="text-xl font-bold text-green-800">
@@ -25,7 +20,6 @@ const LeaveRequestTable = ({
         </span>
       </div>
 
-      {/* Table */}
       <div className="overflow-x-auto">
         <table className="table w-full">
 
@@ -50,17 +44,11 @@ const LeaveRequestTable = ({
                   className="hover:bg-green-50 cursor-pointer transition-colors"
                 >
                   <td>
-                    <p className="font-semibold text-gray-800">
-                      {leave.first_name} {leave.last_name}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {leave.email || "N/A"}
-                    </p>
+                    <p className="font-semibold text-gray-800">{leave.first_name} {leave.last_name} </p>
+                    <p className="text-xs text-gray-500"> {leave.email || "N/A"} </p>
                   </td>
 
-                  <td className="text-gray-700">
-                    {leave.leave_type || "N/A"}
-                  </td>
+                  <td className="text-gray-700"> {leave.leave_type || "N/A"} </td>
 
                   <td className="text-gray-600">
                     {leave.start_date
@@ -74,13 +62,9 @@ const LeaveRequestTable = ({
                       : "N/A"}
                   </td>
 
-                  <td className="text-gray-600">
-                    {leave.requested_days ?? "N/A"}
-                  </td>
+                  <td className="text-gray-600"> {leave.requested_days ?? "N/A"} </td>
 
-                  <td>
-                    <StatusBadge status={leave.status} />
-                  </td>
+                  <td> <StatusBadge status={leave.status} /> </td>
 
                   <td className="text-gray-600">
                     {leave.created_at
@@ -97,7 +81,6 @@ const LeaveRequestTable = ({
               </tr>
             )}
           </tbody>
-
         </table>
       </div>
     </div>

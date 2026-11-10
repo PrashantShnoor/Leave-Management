@@ -24,7 +24,6 @@ const EmployeeManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Fetch employees from backend
   useEffect(() => {
     fetchEmployees();
   }, []);
@@ -57,7 +56,6 @@ const EmployeeManagement = () => {
     }
   };
 
-  // Search and filter employees
   const filteredEmployees = useMemo(() => {
     return employees.filter((employee) => {
       const fullName =
@@ -79,7 +77,6 @@ const EmployeeManagement = () => {
   }, [employees, search, statusFilter]);
 
 
-  // Table columns
   const columns = [
   {
     key: "id",
@@ -121,7 +118,6 @@ const EmployeeManagement = () => {
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
       <div>
         <h1 className="text-2xl font-bold text-green-900">
           Employee Management
@@ -132,14 +128,12 @@ const EmployeeManagement = () => {
         </p>
       </div>
 
-      {/* Loading */}
       {loading && (
         <div className="flex min-h-48 items-center justify-center">
           <span className="loading loading-spinner loading-lg text-green-700"></span>
         </div>
       )}
 
-      {/* Error */}
       {!loading && error && (
         <div className="rounded-xl border border-red-200 bg-red-50 p-4">
           <p className="text-sm text-red-700">{error}</p>
@@ -153,35 +147,16 @@ const EmployeeManagement = () => {
         </div>
       )}
 
-      {/* Dashboard Content */}
       {!loading && !error && (
         <>
-          {/* Summary */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <SummaryCard
-              title="Total Employees"
-              count={employees.length}
-              icon={<FiUsers size={20} />}
-              color="green"
-            />
+            <SummaryCard title="Total Employees" count={employees.length} icon={<FiUsers size={20} />} color="green" />
 
-            <SummaryCard
-              title="Active Employees"
-              count={"-"}
-              icon={<FiUserCheck size={20} />}
-              color="blue"
-            />
+            <SummaryCard title="Active Employees" count={"-"} icon={<FiUserCheck size={20} />} color="blue" />
 
-            <SummaryCard
-              title="Inactive Employees"
-              count={"-"}
-              
-              icon={<FiUserX size={20} />}
-              color="red"
-            />
+            <SummaryCard title="Inactive Employees" count={"-"} icon={<FiUserX size={20} />} color="red" />
           </div>
 
-          {/* Search and Filters */}
           <div className="flex flex-col gap-3 rounded-xl border border-green-100 bg-white p-4 md:flex-row md:items-center md:justify-between">
             <div className="relative w-full md:max-w-sm">
               <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -206,7 +181,6 @@ const EmployeeManagement = () => {
             </select>
           </div>
 
-          {/* Employee Table */}
           <div>
             <div className="mb-3 flex items-center justify-between">
               <h2 className="font-semibold text-gray-800">
@@ -218,16 +192,11 @@ const EmployeeManagement = () => {
               </span>
             </div>
 
-            <DataTable
-              columns={columns}
-              data={filteredEmployees}
-              emptyMessage="No employees match your search."
-            />
+            <DataTable columns={columns} data={filteredEmployees} emptyMessage="No employees match your search." />
           </div>
         </>
       )}
 
-      {/* Employee Details Modal */}
       {selectedEmployee && (
         <div className="fixed inset-0 z-40 flex items-center justify-center overflow-y-auto bg-black/40 p-4">
           <div className="w-full max-w-xl">

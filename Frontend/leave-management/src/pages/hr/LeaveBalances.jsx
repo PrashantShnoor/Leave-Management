@@ -312,11 +312,8 @@ const LeaveBalances = () => {
                       <div className="flex items-center gap-3">
 
                         <div className="avatar placeholder">
-                          <div className="bg-green-100 text-green-700 rounded-full w-10">
-                            <span className="font-semibold">
-                              {employee.first_name?.[0]}
-                              {employee.last_name?.[0]}
-                            </span>
+                          <div className="bg-green-100 text-green-700 rounded-full w-10 flex items-center justify-center">
+                            <span className="font-semibold">{employee.first_name?.[0]}{employee.last_name?.[0]} </span>
                           </div>
                         </div>
 

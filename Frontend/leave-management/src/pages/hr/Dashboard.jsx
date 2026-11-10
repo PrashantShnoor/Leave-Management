@@ -1,6 +1,6 @@
-
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 import {
   FiUsers,
@@ -13,6 +13,7 @@ import {
 import BASE_URL from "../../utils/constants";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [summary, setSummary] = useState({
     totalEmployees: 0,
     pendingRequests: 0,
@@ -29,12 +30,9 @@ const Dashboard = () => {
       setLoading(true);
       setError("");
 
-      const response = await axios.get(
-        `${BASE_URL}/hrDashboardSummary`,
-        {
-          withCredentials: true,
-        }
-      );
+      const response = await axios.get(`${BASE_URL}/hrDashboardSummary`, {
+        withCredentials: true,
+      });
 
       setSummary(response.data.data);
     } catch (error) {
@@ -42,7 +40,7 @@ const Dashboard = () => {
 
       setError(
         error.response?.data?.message ||
-          "Unable to fetch dashboard information."
+          "Unable to fetch dashboard information.",
       );
     } finally {
       setLoading(false);
@@ -85,11 +83,31 @@ const Dashboard = () => {
     },
   ];
 
+  const quickActions = [
+    {
+      title: "Manage Leave Requests",
+      description: "Review pending employee applications",
+      path: "/hr/manage",
+    },
+    {
+      title: "Manage Employees",
+      description: "View employee information",
+      path: "/hr/employees",
+    },
+    {
+      title: "Leave Balances",
+      description: "Check employee leave balances",
+      path: "/hr/leave-balances",
+    },
+    {
+      title: "Leave Types",
+      description: "Manage available leave categories",
+      path: "/hr/leave-types",
+    },
+  ];
   // Calculate overview percentages
   const totalLeaveRequests =
-    summary.pendingRequests +
-    summary.approvedLeaves +
-    summary.rejectedLeaves;
+    summary.pendingRequests + summary.approvedLeaves + summary.rejectedLeaves;
 
   const getPercentage = (value) => {
     if (totalLeaveRequests === 0) return 0;
@@ -171,13 +189,11 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="space-y-6">
 
+    <div className="space-y-6">
       {/* Page Heading */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-800">
-          HR Dashboard
-        </h1>
+        <h1 className="text-2xl font-bold text-gray-800">HR Dashboard</h1>
 
         <p className="mt-1 text-sm text-gray-500">
           Overview of employees and leave activities.
@@ -211,9 +227,7 @@ const Dashboard = () => {
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-500">
-                      {item.title}
-                    </p>
+                    <p className="text-sm text-gray-500">{item.title}</p>
 
                     <h2 className="mt-2 text-2xl font-bold text-gray-800">
                       {item.value}
@@ -232,12 +246,9 @@ const Dashboard = () => {
 
           {/* Leave Overview and Quick Actions */}
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-
             {/* Dynamic Leave Overview */}
             <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
-              <h2 className="font-semibold text-gray-800">
-                Leave Overview
-              </h2>
+              <h2 className="font-semibold text-gray-800">Leave Overview</h2>
 
               <p className="mt-1 text-sm text-gray-500">
                 Current leave request distribution.
@@ -247,9 +258,7 @@ const Dashboard = () => {
                 {leaveOverview.map((item) => (
                   <div key={item.label}>
                     <div className="mb-2 flex justify-between text-sm">
-                      <span className="text-gray-600">
-                        {item.label}
-                      </span>
+                      <span className="text-gray-600">{item.label}</span>
 
                       <span className="font-semibold text-gray-800">
                         {item.value} ({item.width}%)
@@ -275,36 +284,18 @@ const Dashboard = () => {
 
             {/* Frontend-only Quick Actions */}
             <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
-              <h2 className="font-semibold text-gray-800">
-                Quick Actions
-              </h2>
+              <h2 className="font-semibold text-gray-800">Quick Actions</h2>
 
               <p className="mt-1 text-sm text-gray-500">
                 Common HR operations.
               </p>
 
               <div className="mt-5 space-y-3">
-                {[
-                  [
-                    "Manage Leave Requests",
-                    "Review pending employee applications",
-                  ],
-                  [
-                    "Manage Employees",
-                    "View employee information",
-                  ],
-                  [
-                    "Leave Balances",
-                    "Check employee leave balances",
-                  ],
-                  [
-                    "Leave Types",
-                    "Manage available leave categories",
-                  ],
-                ].map(([title, description]) => (
+                {quickActions.map(({ title, description, path }) => (
                   <div
                     key={title}
-                    className="flex items-center justify-between rounded-lg border border-gray-100 p-3"
+                    onClick={() => navigate(path)}
+                    className="flex cursor-pointer items-center justify-between rounded-lg border border-gray-100 p-3 transition hover:border-green-200 hover:bg-green-50"
                   >
                     <div>
                       <p className="text-sm font-medium text-gray-800">
@@ -316,7 +307,7 @@ const Dashboard = () => {
                       </p>
                     </div>
 
-                    <FiArrowRight className="text-gray-400" />
+                    <FiArrowRight className="text-gray-400 transition-transform group-hover:translate-x-1" />
                   </div>
                 ))}
               </div>
@@ -324,57 +315,6 @@ const Dashboard = () => {
           </div>
         </>
       )}
-
-      {/* Frontend-only Recent Leave Requests */}
-      <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
-        <div className="border-b border-gray-100 p-5">
-          <h2 className="font-semibold text-gray-800">
-            Recent Leave Requests
-          </h2>
-
-          <p className="mt-1 text-sm text-gray-500">
-            Latest leave applications submitted by employees.
-          </p>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="table">
-            <thead>
-              <tr className="text-gray-500">
-                <th>Employee</th>
-                <th>Leave Type</th>
-                <th>Dates</th>
-                <th>Days</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {recentRequests.map((request) => (
-                <tr key={request.id}>
-                  <td className="font-medium text-gray-800">
-                    {request.employee}
-                  </td>
-
-                  <td>{request.type}</td>
-                  <td>{request.dates}</td>
-                  <td>{request.days}</td>
-
-                  <td>
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusClass(
-                        request.status
-                      )}`}
-                    >
-                      {request.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
 
     </div>
   );
