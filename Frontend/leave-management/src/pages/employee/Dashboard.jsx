@@ -30,7 +30,6 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchLeaves();
-    // console.log(leaveBalances);
   }, []);
   
   const summary = useMemo(() => {
@@ -170,7 +169,7 @@ const Dashboard = () => {
               {index === 0 && (
                 <button
                   className="btn btn-outline btn-primary btn-sm"
-                  onClick={() => navigate("/leaves")}
+                  onClick={() => navigate("/employee/leaves")}
                 >
                   Apply
                 </button>

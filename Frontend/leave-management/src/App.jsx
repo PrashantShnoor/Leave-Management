@@ -23,6 +23,7 @@ import LandingPage from "./pages/public/LandingPage"
 import CreateEmployee from "./pages/admin/CreateEmployee";
 import HrAccounts from "./pages/admin/HrAccounts";
 import LeaveRequests from "./pages/admin/LeaveRequests";
+import LeaveAvailability from "./pages/hr/LeaveAvailability";
 
 
 function App() {
@@ -41,6 +42,7 @@ function App() {
             <Route path="create-employee" element={<CreateEmployee />}/>
             <Route path="hr-accounts" element={<HrAccounts />}/>
             <Route path="leaveRequests" element={<LeaveRequests />}/>
+            <Route path="leave-availability" element={<LeaveAvailability />} />
           </Route>
         </Route>
 
@@ -52,7 +54,9 @@ function App() {
             <Route path="employees" element={<Employees />} />
             <Route path="leave-balances" element={<LeaveBalances />} />
             <Route path="leave-types" element={<LeaveTypes />} />
+            <Route path="leave-availability" element={<LeaveAvailability />}/>
             <Route path="reports" element={<Reports />} />
+
           </Route>
         </Route>
 

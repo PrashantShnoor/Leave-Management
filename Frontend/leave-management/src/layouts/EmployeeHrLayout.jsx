@@ -3,6 +3,7 @@ import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { FaCalendarDay, FaHome } from "react-icons/fa";
 import { BiBuoy, BiCalendarCheck } from "react-icons/bi";
 import { FaUsers, FaCalendarAlt, FaChartBar } from "react-icons/fa";
+import { MdAccountBalance } from "react-icons/md";
 import axios from "axios";
 import BASE_URL from "../utils/constants";
 
@@ -49,12 +50,17 @@ const EmployeeHrLayout = () => {
     {
       name: "Leave Balances",
       path: "/hr/leave-balances",
-      icon: <FaCalendarAlt className="size-6" />,
+      icon: <MdAccountBalance  className="size-6"/>,
     },
     {
       name: "Leave Types",
       path: "/hr/leave-types",
       icon: <BiBuoy className="size-6" />,
+    },
+    {
+      name: "Leave Availability",
+      path: "/hr/leave-availability",
+      icon: <FaCalendarAlt className="size-6"/>
     },
     {
       name: "Reports",

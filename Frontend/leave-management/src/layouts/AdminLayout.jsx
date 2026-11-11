@@ -6,12 +6,11 @@ import {
   FiUserPlus,
   FiBriefcase,
   FiCalendar,
-  FiMenu,
   FiX,
   FiLogOut,
-  FiUser,
-  FiBell,
+  FiUser
 } from "react-icons/fi";
+import { FaCalendarAlt } from "react-icons/fa";
 
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -57,6 +56,11 @@ const AdminLayout = () => {
           name: "Leaves Requests",
           path: "/admin/leaveRequests",
           icon: FiCalendar,
+        },
+        {
+          name: "Leave Availability",
+          path: "/admin/leave-availability",
+          icon: FaCalendarAlt 
         },
       ],
     },

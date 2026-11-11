@@ -51,7 +51,7 @@ const Dashboard = () => {
     fetchDashboardSummary();
   }, []);
 
-  // Summary cards
+
   const summaryCards = [
     {
       title: "Total Employees",
@@ -105,7 +105,7 @@ const Dashboard = () => {
       path: "/hr/leave-types",
     },
   ];
-  // Calculate overview percentages
+ 
   const totalLeaveRequests =
     summary.pendingRequests + summary.approvedLeaves + summary.rejectedLeaves;
 
@@ -136,41 +136,6 @@ const Dashboard = () => {
     },
   ];
 
-  // Frontend-only recent requests
-  const recentRequests = [
-    {
-      id: 1,
-      employee: "Rahul Sharma",
-      type: "Casual Leave",
-      dates: "Nov 10 - Nov 12, 2026",
-      days: 3,
-      status: "Pending",
-    },
-    {
-      id: 2,
-      employee: "Priya Singh",
-      type: "Sick Leave",
-      dates: "Nov 08 - Nov 09, 2026",
-      days: 2,
-      status: "Approved",
-    },
-    {
-      id: 3,
-      employee: "Amit Kumar",
-      type: "Annual Leave",
-      dates: "Nov 15 - Nov 19, 2026",
-      days: 5,
-      status: "Pending",
-    },
-    {
-      id: 4,
-      employee: "Neha Verma",
-      type: "Casual Leave",
-      dates: "Nov 05, 2026",
-      days: 1,
-      status: "Rejected",
-    },
-  ];
 
   const getStatusClass = (status) => {
     switch (status) {
@@ -200,7 +165,6 @@ const Dashboard = () => {
         </p>
       </div>
 
-      {/* Loading and Error */}
       {loading ? (
         <div className="flex justify-center rounded-xl bg-white p-10">
           <span className="loading loading-spinner loading-lg text-green-600"></span>
@@ -218,7 +182,6 @@ const Dashboard = () => {
         </div>
       ) : (
         <>
-          {/* Summary Cards */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {summaryCards.map((item) => (
               <div
@@ -229,14 +192,10 @@ const Dashboard = () => {
                   <div>
                     <p className="text-sm text-gray-500">{item.title}</p>
 
-                    <h2 className="mt-2 text-2xl font-bold text-gray-800">
-                      {item.value}
-                    </h2>
+                    <h2 className="mt-2 text-2xl font-bold text-gray-800"> {item.value} </h2>
                   </div>
 
-                  <div
-                    className={`rounded-xl p-3 text-xl ${item.bg} ${item.color}`}
-                  >
+                  <div className={`rounded-xl p-3 text-xl ${item.bg} ${item.color}`} >
                     {item.icon}
                   </div>
                 </div>
@@ -244,9 +203,7 @@ const Dashboard = () => {
             ))}
           </div>
 
-          {/* Leave Overview and Quick Actions */}
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            {/* Dynamic Leave Overview */}
             <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
               <h2 className="font-semibold text-gray-800">Leave Overview</h2>
 
@@ -282,7 +239,6 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* Frontend-only Quick Actions */}
             <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
               <h2 className="font-semibold text-gray-800">Quick Actions</h2>
 
