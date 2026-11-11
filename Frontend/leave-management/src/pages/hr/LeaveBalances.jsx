@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState , useMemo} from "react";
 import axios from "axios";
 import BASE_URL from "../../utils/constants";
 import {
@@ -10,6 +10,7 @@ import {
 } from "react-icons/fa";
 
 import { BiCalendarCheck } from "react-icons/bi";
+import MessageDialog from "../../components/common/MessageDialog";
 
 const LeaveBalances = () => {
   const currentYear = new Date().getFullYear();
@@ -17,12 +18,36 @@ const LeaveBalances = () => {
   const [employees, setEmployees] = useState([]);
   const [leaveTypes, setLeaveTypes] = useState([]);
   const [balances, setBalances] = useState([]);
+  const [leaveRequests , setLeaveRequests] = useState([]);
 
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const [messageDialog, setMessageDialog] = useState({
+    isOpen: false,
+    type: "info",
+    title: "",
+    message: "",
+  });
+
+  const showMessage = (type, message, title = "") => {
+    setMessageDialog({
+      isOpen: true,
+      type,
+      title,
+      message,
+    });
+  };
+
+  const closeMessage = () => {
+    setMessageDialog((previous) => ({
+      ...previous,
+      isOpen: false,
+    }));
+  };
 
   const [leaveYear, setLeaveYear] = useState(currentYear);
   const [selectedLeaveType, setSelectedLeaveType] = useState("");
@@ -40,38 +65,38 @@ const LeaveBalances = () => {
     return [];
   };
 
+    const getTodayDate = () => {
+      const today = new Date();
+
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, "0");
+      const day = String(today.getDate()).padStart(2, "0");
+
+      return `${year}-${month}-${day}`;
+    };
   const fetchData = async () => {
     try {
       setLoading(true);
 
-      const [
-        employeeResponse,
-        leaveTypeResponse,
-        balanceResponse,
-      ] = await Promise.all([
-        axios.get(`${BASE_URL}/getAllEmployees`, {
-          withCredentials: true,
-        }),
+      const [employeeResponse, leaveTypeResponse, balanceResponse, requestResponse] = 
+      await Promise.all([
+        axios.get(`${BASE_URL}/getAllEmployees`, {withCredentials: true}),
 
-        axios.get(`${BASE_URL}/getLeaveTypes`, {
-          withCredentials: true,
-        }),
+        axios.get(`${BASE_URL}/getLeaveTypes`, {withCredentials: true}),
 
-        axios.get(`${BASE_URL}/getAllLeaveBalances`, {
-          withCredentials: true,
-        }),
+        axios.get(`${BASE_URL}/getAllLeaveBalances`, {withCredentials: true}),
+
+        axios.get(`${BASE_URL}/getAllrequest` , {withCredentials: true})
       ]);
 
       setEmployees(getArray(employeeResponse));
       setLeaveTypes(getArray(leaveTypeResponse));
       setBalances(getArray(balanceResponse));
+      setLeaveRequests(requestResponse.data.leave_requests || []);
 
     } catch (error) {
       console.error("Error fetching leave balance data:", error);
-      alert(
-        error.response?.data?.message ||
-        "Unable to load leave balance information."
-      );
+      showMessage("error", error.response?.data?.message || "Unable to load leave balance information.");
     } finally {
       setLoading(false);
     }
@@ -82,8 +107,7 @@ const LeaveBalances = () => {
   }, []);
 
   const filteredEmployees = employees.filter((employee) => {
-    const fullName =
-      `${employee.first_name || ""} ${employee.last_name || ""}`;
+    const fullName = `${employee.first_name || ""} ${employee.last_name || ""}`;
 
     return (
       fullName.toLowerCase().includes(search.toLowerCase()) ||
@@ -124,12 +148,12 @@ const LeaveBalances = () => {
     e.preventDefault();
 
     if (!selectedEmployee) {
-      alert("Please select an employee.");
+      showMessage("warning", "Please select an employee.");
       return;
     }
 
     if (!selectedLeaveType || !allocatedDays) {
-      alert("Please select a leave type and enter allocated days.");
+      showMessage("warning", "Please select a leave type and enter allocated days.");
       return;
     }
 
@@ -137,12 +161,12 @@ const LeaveBalances = () => {
     const year = Number(leaveYear);
 
     if (!Number.isFinite(days) || days <= 0) {
-      alert("Allocated days must be greater than zero.");
+      showMessage("warning", "Allocated days must be greater than zero.");
       return;
     }
 
     if (!Number.isInteger(year) || year < 2000) {
-      alert("Please enter a valid leave year.");
+      showMessage("warning", "Please enter a valid leave year.");
       return;
     }
 
@@ -156,31 +180,21 @@ const LeaveBalances = () => {
           leave_type_id: Number(selectedLeaveType),
           leave_year: year,
           allocated_days: days,
-        },
-        {
-          withCredentials: true,
-        }
+        },{ withCredentials: true}
       );
 
-      alert(
-        response.data?.message ||
-        "Leave balance assigned successfully!"
-      );
+      showMessage("success", response.data?.message || "Leave balance assigned successfully!");
 
       setShowAssignModal(false);
       setSelectedLeaveType("");
       setAllocatedDays("");
 
-      // Fetch updated balances
       await fetchData();
 
     } catch (error) {
       console.error("Error assigning leave balance:", error);
 
-      alert(
-        error.response?.data?.message ||
-        "Unable to assign leave balance. Please try again."
-      );
+      showMessage("error", error.response?.data?.message || "Unable to assign leave balance. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -192,14 +206,38 @@ const LeaveBalances = () => {
     setSelectedLeaveType("");
     setAllocatedDays("");
   };
+   const employeesOnLeave = useMemo(() => {
+      const today = getTodayDate();
+  
+      const employeeIds = new Set();
+  
+      leaveRequests.forEach((request) => {
+        const status = String(request.status || "").toLowerCase();
+  
+        const startDate = String(request.start_date || "").slice(0, 10);
+        const endDate = String(request.end_date || "").slice(0, 10);
+  
+        const isApproved = status === "approved";
+        const isCurrentlyOnLeave =
+          startDate <= today && endDate >= today;
+  
+        if (
+          isApproved &&
+          isCurrentlyOnLeave &&
+          request.employee_id
+        ) {
+          employeeIds.add(request.employee_id);
+        }
+      });
+  
+      return employeeIds.size;
+    }, [leaveRequests]);
 
   return (
     <div className="space-y-6">
 
       <div>
-        <h1 className="text-2xl font-bold text-gray-800">
-          Leave Balances
-        </h1>
+        <h1 className="text-2xl font-bold text-gray-800"> Leave Balances </h1>
 
         <p className="text-gray-500 mt-1">
           Manage leave allocations for your employees.
@@ -214,13 +252,9 @@ const LeaveBalances = () => {
           </div>
 
           <div>
-            <p className="text-sm text-gray-500">
-              Total Employees
-            </p>
+            <p className="text-sm text-gray-500"> Total Employees</p>
 
-            <h2 className="text-2xl font-bold text-gray-800">
-              {employees.length}
-            </h2>
+            <h2 className="text-2xl font-bold text-gray-800"> {employees.length} </h2>
           </div>
         </div>
 
@@ -229,20 +263,19 @@ const LeaveBalances = () => {
             <FaCalendarAlt className="text-xl" />
           </div>
 
-          <div>
+          <div className="cursor-pointer">
             <p className="text-sm text-gray-500">
-              Available Leave Types
+              Employee currently on leave
             </p>
 
             <h2 className="text-2xl font-bold text-gray-800">
-              {leaveTypes.length}
+              {loading ? "...." : employeesOnLeave}
             </h2>
           </div>
         </div>
 
       </div>
 
-      {/* Employee List */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">
 
         <div className="p-5 border-b border-gray-100 flex flex-col sm:flex-row justify-between gap-4">
@@ -271,7 +304,6 @@ const LeaveBalances = () => {
 
         </div>
 
-        {/* Employee Table */}
         <div className="overflow-x-auto">
 
           <table className="table w-full">
@@ -354,38 +386,25 @@ const LeaveBalances = () => {
         </div>
       </div>
 
-      {/* Employee Details Modal */}
       {selectedEmployee && (
 
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
 
           <div className="bg-white w-full max-w-3xl rounded-2xl shadow-xl max-h-[90vh] overflow-y-auto">
 
-            {/* Dialog Header */}
             <div className="p-5 border-b flex justify-between items-center">
 
               <div>
-                <h2 className="text-xl font-bold text-gray-800">
-                  Employee Leave Details
-                </h2>
+                <h2 className="text-xl font-bold text-gray-800"> Employee Leave Details </h2>
 
-                <p className="text-sm text-gray-500">
-                  Manage allocated leave balances.
-                </p>
+                <p className="text-sm text-gray-500"> Manage allocated leave balances. </p>
               </div>
 
-              <button
-                onClick={closeEmployeeDetails}
-                className="btn btn-sm btn-circle btn-ghost"
-              >
+              <button onClick={closeEmployeeDetails} className="btn btn-sm btn-circle btn-ghost">
                 <FaTimes />
               </button>
-
             </div>
-
             <div className="p-5 space-y-5">
-
-              {/* Employee Information */}
               <div className="flex items-center gap-4">
 
                 <div className="bg-green-100 text-green-700 rounded-full w-14 h-14 flex items-center justify-center text-xl font-bold">
@@ -399,20 +418,15 @@ const LeaveBalances = () => {
                     {selectedEmployee.last_name}
                   </h3>
 
-                  <p className="text-sm text-gray-500">
-                    {selectedEmployee.email}
-                  </p>
+                  <p className="text-sm text-gray-500"> {selectedEmployee.email} </p>
 
-                  <p className="text-xs text-gray-400">
-                    Employee ID: EMP-{selectedEmployee.id}
-                  </p>
+                  <p className="text-xs text-gray-400"> Employee ID: EMP-{selectedEmployee.id} </p>
                 </div>
 
               </div>
 
               <div className="divider my-0"></div>
 
-              {/* Leave Year */}
               <div className="flex items-center justify-between gap-3">
 
                 <div>
@@ -425,47 +439,24 @@ const LeaveBalances = () => {
                   </p>
                 </div>
 
-                <select
-                  value={leaveYear}
-                  onChange={(e) => setLeaveYear(Number(e.target.value))}
-                  className="select select-bordered select-sm"
-                >
-                  <option value={currentYear}>
-                    {currentYear}
-                  </option>
+                <select value={leaveYear} onChange={(e) => setLeaveYear(Number(e.target.value))} className="select select-bordered select-sm">
+                  <option value={currentYear}> {currentYear} </option>
 
-                  <option value={currentYear - 1}>
-                    {currentYear - 1}
-                  </option>
+                  <option value={currentYear - 1}> {currentYear - 1} </option>
 
-                  <option value={currentYear + 1}>
-                    {currentYear + 1}
-                  </option>
+                  <option value={currentYear + 1}> {currentYear + 1} </option>
                 </select>
 
               </div>
-
-              {/* Assigned Leave Types */}
               <div className="space-y-3">
-
                 {employeeBalances.length === 0 ? (
-
                   <div className="text-center py-8 bg-gray-50 rounded-xl">
-
                     <BiCalendarCheck className="text-4xl text-gray-400 mx-auto mb-2" />
+                    <p className="font-semibold text-gray-700"> No leave balances assigned </p>
 
-                    <p className="font-semibold text-gray-700">
-                      No leave balances assigned
-                    </p>
-
-                    <p className="text-sm text-gray-500">
-                      Assign leave types to this employee.
-                    </p>
-
+                    <p className="text-sm text-gray-500"> Assign leave types to this employee. </p>
                   </div>
-
                 ) : (
-
                   employeeBalances.map((balance) => {
 
                     const leaveType = leaveTypes.find(
@@ -479,21 +470,16 @@ const LeaveBalances = () => {
 
                     return (
 
-                      <div
-                        key={balance.id}
-                        className="border border-gray-200 rounded-xl p-4"
-                      >
+                      <div key={balance.id} className="border border-gray-200 rounded-xl p-4" >
 
                         <div className="flex justify-between items-center mb-4">
 
                           <h4 className="font-bold text-gray-800">
                             {leaveType?.type || leaveType?.name || "Leave Type"}
                           </h4>
-
                           <span className="badge badge-success badge-soft">
                             Assigned
                           </span>
-
                         </div>
 
                         <div className="grid grid-cols-3 gap-3">
@@ -723,6 +709,14 @@ const LeaveBalances = () => {
           </div>
         </div>
       )}
+
+      <MessageDialog
+        isOpen={messageDialog.isOpen}
+        onClose={closeMessage}
+        type={messageDialog.type}
+        title={messageDialog.title}
+        message={messageDialog.message}
+      />
 
     </div>
   );

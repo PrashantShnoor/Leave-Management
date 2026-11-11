@@ -1,4 +1,6 @@
-import React from "react";
+
+import React, { useEffect, useMemo, useState } from "react";
+import Pagination from "./Pagination";
 
 const DataTable = ({
   columns = [],
@@ -7,6 +9,33 @@ const DataTable = ({
   emptyMessage = "No records found.",
   rowKey = "id",
 }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  const totalItems = data.length;
+  const totalPages = Math.ceil(totalItems / pageSize);
+
+  // Keep the current page valid if filtering or deleting records
+  // reduces the total number of pages.
+  useEffect(() => {
+    if (currentPage > Math.max(totalPages, 1)) {
+      setCurrentPage(Math.max(totalPages, 1));
+    }
+  }, [currentPage, totalPages]);
+
+  // Get only the records required for the current page.
+  const currentData = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+
+    return data.slice(startIndex, endIndex);
+  }, [data, currentPage, pageSize]);
+
+  const handlePageSizeChange = (newSize) => {
+    setPageSize(newSize);
+    setCurrentPage(1);
+  };
+
   return (
     <div className="overflow-x-auto bg-white rounded-xl border border-green-100 shadow-sm">
       <table className="table w-full">
@@ -22,8 +51,8 @@ const DataTable = ({
         </thead>
 
         <tbody>
-          {data.length > 0 ? (
-            data.map((row, index) => (
+          {currentData.length > 0 ? (
+            currentData.map((row, index) => (
               <tr
                 key={row[rowKey] ?? index}
                 onClick={() => onRowClick?.(row)}
@@ -52,6 +81,15 @@ const DataTable = ({
           )}
         </tbody>
       </table>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={handlePageSizeChange}
+      />
     </div>
   );
 };
