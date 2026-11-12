@@ -36,6 +36,7 @@ leaveTypeRoutes.post("/createLeaveType", async (req, res) => {
     });
   }
 });
+
 leaveTypeRoutes.get("/getLeaveTypes", async (req, res) => {
   try {
     const result = await pool.query(

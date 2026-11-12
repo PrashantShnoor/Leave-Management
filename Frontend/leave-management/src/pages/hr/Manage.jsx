@@ -176,8 +176,12 @@ const Manage = () => {
           ? `/approveLeave/${selectedRequest.id}`
           : `/rejectLeave/${selectedRequest.id}`;
 
-      const response = await axios.patch(`${BASE_URL}${endpoint}`, {
-        reviewer_comment: reviewComment.trim() || null,
+      const response = await axios.patch(`${BASE_URL}${endpoint}`,
+        {
+          reviewer_comment: reviewComment.trim() || null,
+        },
+        {
+          withCredentials : true
         });
 
       if (!response.data.leave) {

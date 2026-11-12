@@ -12,7 +12,7 @@ const authMiddleware = (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
 
-    // Your login route signs the token with { id: user.id }
+    
     req.user = decoded;
 
     next();
