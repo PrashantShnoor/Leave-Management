@@ -2,18 +2,26 @@ import express from "express";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import http from "http";
+import { createServer } from "http";
 
 import { connectDB } from "./config/database.js";
 
 import authRoutes from "./routes/auth.js";
+import dashboardRoutes from "./routes/dashboard.js";
 import userRoutes from "./routes/employee.js";
-import requestRoutes from "./routes/request.js";
-import leaveTypeRoutes from "./routes/leavetype.js";
+import hrRoutes from "./routes/hr.js";
 import leaveBalanceRoute from "./routes/leavebalance.js";
+import leaveRequestRoutes from "./routes/leaverequest.js";
+import leaveTypeRoutes from "./routes/leavetype.js";
+import notificationRoutes from "./routes/notifications.js";
+
+import { initializeSocket } from "./config/socket.js"
 
 dotenv.config();
 
 const app = express();
+const server = http.createServer(app);
 
 app.use(cors({
   origin: "http://localhost:5173",
@@ -23,18 +31,23 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
+initializeSocket(server);
+
 // Routes
 app.use("/", authRoutes);
+app.use("/" , dashboardRoutes);
 app.use("/", userRoutes);
-app.use("/", requestRoutes);
-app.use("/", leaveTypeRoutes);
+app.use("/" , hrRoutes);
 app.use("/", leaveBalanceRoute);
+app.use("/" , leaveRequestRoutes);
+app.use("/", leaveTypeRoutes);
+app.use("/notifications", notificationRoutes);
 
 connectDB()
   .then(() => {
     console.log("Database connected successfully");
 
-    app.listen(7777, () => {
+    server.listen(7777, () => {
       console.log("Server is successfully listening on port 7777...");
     });
   })

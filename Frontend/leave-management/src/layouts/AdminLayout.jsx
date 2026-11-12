@@ -8,9 +8,12 @@ import {
   FiCalendar,
   FiX,
   FiLogOut,
-  FiUser
+  FiUser,
+  FiMenu,
 } from "react-icons/fi";
 import { FaCalendarAlt } from "react-icons/fa";
+import NotificationBell from "../components/common/Notificationbell";
+import useNotifications from "../hooks/notifications";
 
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -75,13 +78,26 @@ const AdminLayout = () => {
 
   const closeSidebar = () => setSidebarOpen(false);
 
+    const {
+    notifications,
+    unreadCount,
+    loading,
+    markAsRead,
+    markAllAsRead,
+  } = useNotifications();
+
+  const handleNotificationClick = async (notification) => {
+    if (!notification.is_read) {
+      await markAsRead(notification.id);
+    }
+
+    // We can add navigation to the related leave request here.
+  };
+
   return (
     <div className="min-h-screen bg-base-200 lg:flex">
       {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/40 lg:hidden"
-          onClick={closeSidebar}
-        />
+        <div className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={closeSidebar} />
       )}
 
       <aside
@@ -109,10 +125,7 @@ const AdminLayout = () => {
             </div>
           </div>
 
-          <button
-            className="btn btn-ghost btn-sm lg:hidden"
-            onClick={closeSidebar}
-          >
+          <button className="btn btn-ghost btn-sm lg:hidden" onClick={closeSidebar} >
             <FiX size={21} />
           </button>
         </div>
@@ -179,6 +192,36 @@ const AdminLayout = () => {
       </aside>
 
       <div className="min-w-0 flex-1">
+        <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-base-300 bg-base-100 px-4 sm:px-6 lg:px-8">
+
+          <div className="flex items-center gap-3">
+            <button onClick={() => setSidebarOpen(true)} className="btn btn-ghost btn-square lg:hidden">
+              <FiMenu size={22} />
+            </button>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="flex justify-end p-4">
+              <NotificationBell
+                notifications={notifications}
+                unreadCount={unreadCount}
+                loading={loading}
+                onNotificationClick={handleNotificationClick}
+                onMarkAllRead={markAllAsRead}
+              />
+            </div>
+
+            <div className="hidden items-center gap-2 border-l border-base-300 pl-4 sm:flex">
+              <div className="text-right">
+                <p className="text-sm font-semibold text-base-content"> {adminName}</p>
+              </div>
+
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-success/10 font-bold text-success">
+                {adminName.charAt(0).toUpperCase()}
+              </div>
+            </div>
+          </div>
+        </header>
         <main className="p-4 sm:p-6 lg:p-8">
           <Outlet />
         </main>

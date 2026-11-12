@@ -126,4 +126,33 @@ userRoutes.delete("/deleteEmployee/:id", async (req, res) => {
   
 });
 
+userRoutes.get("/getAllEmployees", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT
+          id,
+          first_name,
+          last_name,
+          email,
+          role,
+          created_at
+       FROM employees
+       WHERE LOWER(role) = 'employee'
+       ORDER BY first_name ASC`
+    );
+
+    return res.status(200).json({
+      message: "Employees fetched successfully",
+      data: result.rows,
+    });
+
+  } catch (error) {
+    console.error("Get all employees error:", error);
+
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+});
+
 export default userRoutes;

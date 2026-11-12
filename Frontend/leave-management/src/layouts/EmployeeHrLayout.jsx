@@ -5,6 +5,8 @@ import { BiBuoy, BiCalendarCheck } from "react-icons/bi";
 import { FaUsers, FaCalendarAlt, FaChartBar } from "react-icons/fa";
 import { MdAccountBalance } from "react-icons/md";
 import axios from "axios";
+import NotificationBell from "../components/common/Notificationbell";
+import useNotifications from "../hooks/notifications";
 import BASE_URL from "../utils/constants";
 
 const EmployeeHrLayout = () => {
@@ -85,6 +87,21 @@ const EmployeeHrLayout = () => {
       navigate("/login", { replace: true });
     }
   };
+    const {
+    notifications,
+    unreadCount,
+    loading,
+    markAsRead,
+    markAllAsRead,
+  } = useNotifications();
+
+  const handleNotificationClick = async (notification) => {
+    if (!notification.is_read) {
+      await markAsRead(notification.id);
+    }
+
+    // We can add navigation to the related leave request here.
+  };
 
   return (
     <div className="drawer lg:drawer-open">
@@ -103,6 +120,15 @@ const EmployeeHrLayout = () => {
           </div>
 
           <div className="flex items-center gap-3">
+            
+              <NotificationBell
+                notifications={notifications}
+                unreadCount={unreadCount}
+                loading={loading}
+                onNotificationClick={handleNotificationClick}
+                onMarkAllRead={markAllAsRead}
+              />
+            
             <span className="text-sm font-semibold text-green-700 hidden sm:block">
               {user.first_name} ({role?.toUpperCase()})
             </span>
