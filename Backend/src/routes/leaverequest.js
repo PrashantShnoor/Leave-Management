@@ -212,7 +212,6 @@ leaveRequestRoutes.patch("/approveLeave/:id", authMiddleware, async (req, res) =
 
   try {
    
-
     const { id } = req.params;
     const reviewer_id = req.user.id;
     const reviewer_comment =
