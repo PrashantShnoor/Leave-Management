@@ -1,4 +1,3 @@
-
 import { pool } from "../config/database.js";
 import { getIO } from "../config/socket.js";
 

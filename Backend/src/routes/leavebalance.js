@@ -1,10 +1,13 @@
 import express from "express";
 import { pool } from "../config/database.js";
 import authMiddleware from "../middleware/auth.js";
+import { emitNotification, saveNotification } from "../utils/notifications.js";
 
 const leaveBalanceRoute = express.Router();
 
-leaveBalanceRoute.post("/createLeavebalance" , async (req , res) => {
+leaveBalanceRoute.post("/createLeavebalance" ,authMiddleware , async (req , res) => {
+    let client;
+    let transactionStarted = false;
     try {
         const { employee_id , leave_type_id , leave_year , allocated_days} = req.body;
 
@@ -25,6 +28,11 @@ leaveBalanceRoute.post("/createLeavebalance" , async (req , res) => {
             });
         }
 
+        client = await pool.connect();
+
+        await client.query("BEGIN");
+        transactionStarted = true;
+
         const query = `
             INSERT INTO employee_leave_balance
                 (employee_id , leave_type_id , leave_year , allocated_days)
@@ -33,7 +41,26 @@ leaveBalanceRoute.post("/createLeavebalance" , async (req , res) => {
             `;
         
         const values = [ employee_id , leave_type_id , leave_year , allocated_days ];
-        const result = await pool.query(query , values);
+        const result = await client.query(query , values);
+
+        const leaveTypeResult = await client.query( `
+        SELECT type
+        FROM leave_type
+        WHERE id = ${leave_type_id}
+        `)
+        const leaveType = leaveTypeResult.rows[0].type;
+
+        const notification = await saveNotification(client , {
+            recipient_id : employee_id,
+            leave_request_id : null , 
+            title : "leave assigned",
+            message : `${allocated_days} days of ${leaveType}  added to you leave balance`,
+            type : "assigned leave_balance", 
+        });
+
+        await client.query("COMMIT");
+        transactionStarted = false;
+        emitNotification(notification);
 
         console.log("Employee leave balance created successfully");
 
@@ -42,10 +69,15 @@ leaveBalanceRoute.post("/createLeavebalance" , async (req , res) => {
             employee_balance : result.rows[0],
         });
     } catch (error) {
+        if (transactionStarted && client) {
+            await client.query("ROLLBACK");
+        }
         console.log("Error in creating employee leave balance :" , error.message);
         return res.status(500).json({
             message: "Internal server error"
         });
+    } finally {
+        if (client) client.release();
     }
 });
 

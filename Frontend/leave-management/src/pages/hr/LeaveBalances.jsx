@@ -524,7 +524,6 @@ const LeaveBalances = () => {
 
               </div>
 
-              {/* Unassigned Leave Types */}
               <div className="space-y-3">
 
                 <h3 className="font-bold text-gray-800">
@@ -541,10 +540,7 @@ const LeaveBalances = () => {
 
                   unassignedLeaveTypes.map((leaveType) => (
 
-                    <div
-                      key={leaveType.id}
-                      className="flex justify-between items-center border border-dashed border-gray-300 rounded-xl p-3"
-                    >
+                    <div key={leaveType.id} className="flex justify-between items-center border border-dashed border-gray-300 rounded-xl p-3">
 
                       <div>
                         <p className="font-semibold text-gray-800">
@@ -567,26 +563,17 @@ const LeaveBalances = () => {
 
               </div>
 
-              {/* Assign New Leave Type Button */}
               {unassignedLeaveTypes.length > 0 && (
 
-                <button
-                  type="button"
-                  onClick={openAssignModal}
-                  className="btn bg-green-600 hover:bg-green-700 text-white w-full"
-                >
+                <button type="button" onClick={openAssignModal} className="btn bg-green-600 hover:bg-green-700 text-white w-full" >
                   <FaPlus />
                   Assign New Leave Type
                 </button>
-
               )}
-
             </div>
-
           </div>
         </div>
       )}
-
       {showAssignModal && selectedEmployee && (
 
         <div className="fixed inset-0 z-60 bg-black/50 flex items-center justify-center p-4">
@@ -607,47 +594,27 @@ const LeaveBalances = () => {
                 </p>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setShowAssignModal(false)}
-                className="btn btn-sm btn-circle btn-ghost"
-              >
+              <button type="button" onClick={() => setShowAssignModal(false)} className="btn btn-sm btn-circle btn-ghost">
                 <FaTimes />
               </button>
 
             </div>
 
-            <form
-              onSubmit={handleAssignLeave}
-              className="p-5 space-y-4"
-            >
+            <form onSubmit={handleAssignLeave} className="p-5 space-y-4" >
 
               <div>
-                <label className="label font-semibold">
-                  Leave Type
-                </label>
-                <select
-                  value={selectedLeaveType}
-                  onChange={(e) => setSelectedLeaveType(e.target.value)}
-                  className="select select-bordered w-full"
-                  required
-                >
-                  <option value="">
-                    Select Leave Type
-                  </option>
-                  {unassignedLeaveTypes.map((type) => (
+                <label className="label font-semibold">Leave Type</label>
+                <select value={selectedLeaveType} onChange={(e) => setSelectedLeaveType(e.target.value)} className="select select-bordered w-full" required>
+                  <option value="">Select Leave Type </option>
 
-                    <option key={type.id} value={type.id}>
-                      {type.type || type.name}
-                    </option>
+                  {unassignedLeaveTypes.map((type) => (
+                    <option key={type.id} value={type.id}> {type.type || type.name} </option>
                   ))}
+
                 </select>
               </div>
               <div>
-
-                <label className="label font-semibold">
-                  Leave Year
-                </label>
+                <label className="label font-semibold"> Leave Year </label>
 
                 <input
                   type="number"
@@ -660,9 +627,7 @@ const LeaveBalances = () => {
               </div>
 
               <div>
-                <label className="label font-semibold">
-                  Allocated Days
-                </label>
+                <label className="label font-semibold"> Allocated Days </label>
                 <input
                   type="number"
                   min="0.5"

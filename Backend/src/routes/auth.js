@@ -3,16 +3,26 @@ import { pool } from "../config/database.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import validatesignupdata from "../utils/validator.js";
+import authMiddleware  from "../middleware/auth.js"
+import { emitNotification, saveNotification } from "../utils/notifications.js";
 
 const authRoutes = express.Router();
 
-authRoutes.post("/signup" , async (req ,res) => {
+authRoutes.post("/signup" ,authMiddleware , async (req ,res) => {
+    const client = await pool.connect();
+    let notifications = [];
     try {
+        if (req.user.role?.toLowerCase() !== "admin") {
+            return res.status(403).json({
+                message: "Only Admin can create new accounts.",
+            });
+        }
         const { first_name , last_name , email , password_hash , role } = req.body;
         validatesignupdata(req.body);
 
         const passwordhash = await bcrypt.hash(password_hash , 10);
 
+        await client.query("BEGIN");
          const query = `
         INSERT INTO employees
             (first_name , last_name , email , password_hash , role)
@@ -21,30 +31,48 @@ authRoutes.post("/signup" , async (req ,res) => {
         `;
 
         const values = [first_name, last_name, email, passwordhash , role];
-        const result = await pool.query(query, values);
+        const result = await client.query(query, values);
 
         const savedUser = result.rows[0];
 
-        const token = jwt.sign(
-            {id : savedUser.id},
-            process.env.JWT_SECRET_KEY,
-            {expiresIn : "1d"}
-        );
-        
-        res.cookie("token" , token);
+        const hrQuery = `
+        SELECT id 
+        FROM employees
+        WHERE LOWER(role) = 'hr'
+        `
 
-        res.json({
+        const hrResult = await client.query(hrQuery);
+
+        for (const hr of hrResult.rows) {
+            const notification = await saveNotification(client, {
+                recipient_id: hr.id,
+                leave_request_id: null,
+                title: "New Account Created",
+                message: `${savedUser.first_name} ${savedUser.last_name} has been added as a new ${savedUser.role}.`,
+                type: "account_created",
+            });
+
+            notifications.push(notification);
+        }
+        await client.query("COMMIT");
+
+        for(const notification of notifications) {
+            emitNotification(notification);
+        }
+        
+        return res.json({
             message : "User created successfully" , 
             data : savedUser
         });
 
     } catch (error) {
+        await client.query("ROLLBACK");
         if (error.code === "23505") {
             return res.status(409).json({
                 message: "Employee already exists with this mail",
             });
         }
-        res.status(400).send("error saving the user :" + error.message);
+        return res.status(400).send("error saving the user :" + error.message);
     }
 });
 
