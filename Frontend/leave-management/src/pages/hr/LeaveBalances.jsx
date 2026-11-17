@@ -7,6 +7,7 @@ import {
   FaCalendarAlt,
   FaPlus,
   FaTimes,
+  FaDownload,
 } from "react-icons/fa";
 
 import { BiCalendarCheck } from "react-icons/bi";
@@ -50,6 +51,7 @@ const LeaveBalances = () => {
   };
 
   const [leaveYear, setLeaveYear] = useState(currentYear);
+  const [exportYear, setExportYear] = useState(currentYear);
   const [selectedLeaveType, setSelectedLeaveType] = useState("");
   const [allocatedDays, setAllocatedDays] = useState("");
 
@@ -114,6 +116,80 @@ const LeaveBalances = () => {
       employee.email?.toLowerCase().includes(search.toLowerCase())
     );
   });
+
+  // Export all employees' leave balances, including unassigned leave types as zero.
+  const handleExportCsv = () => {
+    if (employees.length === 0 || leaveTypes.length === 0) {
+      showMessage("warning", "There is no employee or leave type data to export.");
+      return;
+    }
+
+    const headers = [
+      "Employee ID",
+      "Employee Name",
+      "Email",
+      "Leave Year",
+      ...leaveTypes.flatMap((leaveType) => {
+        const leaveTypeName = leaveType.type || leaveType.name || "Leave Type";
+        return [
+          `${leaveTypeName} - Allocated Days`,
+          `${leaveTypeName} - Used Days`,
+          `${leaveTypeName} - Available Days`,
+        ];
+      }),
+    ];
+
+    // Export all employees, not only the currently visible search results.
+    const rows = employees.map((employee) => {
+      const employeeBalancesForYear = balances.filter(
+        (balance) =>
+          Number(balance.employee_id) === Number(employee.id) &&
+          Number(balance.leave_year) === Number(exportYear)
+      );
+
+      const leaveValues = leaveTypes.flatMap((leaveType) => {
+        const balance = employeeBalancesForYear.find(
+          (item) => Number(item.leave_type_id) === Number(leaveType.id)
+        );
+
+        const allocated = Number(balance?.allocated_days || 0);
+        const used = Number(balance?.used_days || 0);
+        const available = allocated - used;
+
+        return [allocated, used, available];
+      });
+
+      return [
+        `EMP-${employee.id}`,
+        `${employee.first_name || ""} ${employee.last_name || ""}`.trim(),
+        employee.email || "",
+        exportYear,
+        ...leaveValues,
+      ];
+    });
+
+    const escapeCsvValue = (value) => {
+      const stringValue = String(value ?? "");
+      return `"${stringValue.replace(/"/g, '""')}"`;
+    };
+
+    const csvContent = [headers, ...rows]
+      .map((row) => row.map(escapeCsvValue).join(","))
+      .join("\r\n");
+
+    const blob = new Blob(["\uFEFF", csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `employee-leave-balances-${exportYear}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   const handleEmployeeClick = (employee) => {
     setSelectedEmployee(employee);
@@ -290,16 +366,39 @@ const LeaveBalances = () => {
             </p>
           </div>
 
-          <div className="relative w-full sm:w-72">
-            <FaSearch className="absolute left-3 top-3.5 text-gray-400" />
+          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            <div className="relative w-full sm:w-64">
+              <FaSearch className="absolute left-3 top-3.5 text-gray-400" />
 
-            <input
-              type="text"
-              placeholder="Search employee..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="input input-bordered w-full pl-10 focus:outline-green-500"
-            />
+              <input
+                type="text"
+                placeholder="Search employee..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="input input-bordered w-full pl-10 focus:outline-green-500"
+              />
+            </div>
+
+            <select
+              value={exportYear}
+              onChange={(e) => setExportYear(Number(e.target.value))}
+              className="select select-bordered w-full sm:w-28"
+              aria-label="Export leave year"
+            >
+              <option value={currentYear}>{currentYear}</option>
+              <option value={currentYear - 1}>{currentYear - 1}</option>
+              <option value={currentYear + 1}>{currentYear + 1}</option>
+            </select>
+
+            <button
+              type="button"
+              onClick={handleExportCsv}
+              disabled={loading || employees.length === 0}
+              className="btn bg-green-600 hover:bg-green-700 text-white"
+            >
+              <FaDownload />
+              Export CSV
+            </button>
           </div>
 
         </div>

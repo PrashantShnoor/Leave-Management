@@ -27,10 +27,16 @@ const EmployeeHrLayout = () => {
       icon: <BiBuoy className="size-6" />,
     },
     {
+      name: "Leave Reports",
+      path : "/employee/leaveReports",
+      icon : <FaChartBar className="size-6" />,
+    },
+    {
       name: "My Profile",
       path: "/employee/profile",
       icon: <FaUsers className="size-6" />,
     },
+    
   ];
 
   const hrLinks = [

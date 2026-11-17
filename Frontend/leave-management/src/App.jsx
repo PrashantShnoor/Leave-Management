@@ -24,6 +24,7 @@ import CreateEmployee from "./pages/admin/CreateEmployee";
 import HrAccounts from "./pages/admin/HrAccounts";
 import LeaveRequests from "./pages/admin/LeaveRequests";
 import LeaveAvailability from "./pages/hr/LeaveAvailability";
+import LeaveReport from "./pages/employee/LeaveReport";
 
 
 function App() {
@@ -65,7 +66,9 @@ function App() {
           <Route path="/employee" element={<EmployeeHrLayout />}>
             <Route path="dashboard" element={<EmployeeDashboard />} />
             <Route path="leaves" element={<Leaves />} />
+            <Route path="leaveReports" element={<LeaveReport />} />
             <Route path="profile" element={<Profile />} />
+
           </Route>
         </Route>
       </Routes>
