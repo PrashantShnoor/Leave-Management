@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
+import { Link } from "react-router-dom";
 import LeaveBalanceDetails from "../../components/employee/LeaveBalanceDetails";
 import {
   FiActivity,
@@ -312,7 +313,14 @@ const Leaves = () => {
             </div>
           </div>
 
-          <button
+          <div className="flex flex-wrap gap-2">
+            <Link
+              to="/employee/leave-report"
+              className="btn btn-outline border-emerald-600 text-emerald-700 hover:bg-emerald-600 hover:text-white"
+            >
+              View Full Report
+            </Link>
+            <button
             onClick={() => {
               setFormError("");
               setShowModal(true);
@@ -321,7 +329,8 @@ const Leaves = () => {
           >
             <FiSend size={18} />
             Apply for Leave
-          </button>
+            </button>
+          </div>
         </div>
 
         {successMessage && (
@@ -432,7 +441,7 @@ const Leaves = () => {
                     </td>
                   </tr>
                 ) : filteredLeaves.length > 0 ? (
-                  filteredLeaves.map((leave) => {
+                  filteredLeaves.slice(0, 5).map((leave) => {
                     const status = formatStatus(leave.status);
 
                     return (
@@ -488,7 +497,7 @@ const Leaves = () => {
 
           <div className="border-t border-base-300 px-5 py-4">
             <p className="text-sm text-base-content/60">
-              Showing {filteredLeaves.length} of {leaves.length} leave applications
+              Showing {Math.min(filteredLeaves.length, 5)} of {leaves.length} leave applications. View the full report for all records.
             </p>
           </div>
         </div>

@@ -5,6 +5,30 @@ import SummaryCard from "../../components/common/SummaryCard";
 import DetailItem from "../../components/common/DetailItem"
 import BASE_URL from "../../utils/constants";
 
+const PAGE_SIZE = 10;
+
+const downloadCsv = (headers, rows, filename) => {
+  const escapeValue = (value) =>
+    `"${String(value ?? "").replace(/"/g, '""')}"`;
+
+  const csv = [headers, ...rows]
+    .map((row) => row.map(escapeValue).join(","))
+    .join("\r\n");
+
+  const blob = new Blob(["\uFEFF", csv], {
+    type: "text/csv;charset=utf-8;",
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+
+
 import {
   FiSearch,
   FiCalendar,
@@ -16,6 +40,7 @@ import {
   FiCheck,
   FiBriefcase,
   FiMessageSquare,
+  FiDownload,
 } from "react-icons/fi";
 
 
@@ -43,6 +68,16 @@ const formatDate = (date) => {
   });
 };
 
+const getLocalDateValue = (date) => {
+  if (!date) return "";
+  const parsedDate = new Date(date);
+  if (Number.isNaN(parsedDate.getTime())) return "";
+  const year = parsedDate.getFullYear();
+  const month = String(parsedDate.getMonth() + 1).padStart(2, "0");
+  const day = String(parsedDate.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 const formatStatus = (status) => {
   const normalizedStatus = String(status || "").toLowerCase();
 
@@ -57,6 +92,9 @@ const LeaveRequests = () => {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [appliedFromDate, setAppliedFromDate] = useState("");
+  const [appliedToDate, setAppliedToDate] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [reviewComment, setReviewComment] = useState("");
 
   const [loading, setLoading] = useState(true);
@@ -146,9 +184,45 @@ const LeaveRequests = () => {
       const matchesStatus =
         statusFilter === "All" || request.status === statusFilter;
 
-      return matchesSearch && matchesStatus;
+      // Date-wise filtering is based on the date the employee submitted the request.
+      const appliedDate = getLocalDateValue(request.appliedOn);
+      const matchesFromDate =
+        !appliedFromDate || (appliedDate && appliedDate >= appliedFromDate);
+      const matchesToDate =
+        !appliedToDate || (appliedDate && appliedDate <= appliedToDate);
+
+      return (
+        matchesSearch &&
+        matchesStatus &&
+        matchesFromDate &&
+        matchesToDate
+      );
     });
-  }, [requests, search, statusFilter]);
+  }, [requests, search, statusFilter, appliedFromDate, appliedToDate]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter, appliedFromDate, appliedToDate]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredRequests.length / PAGE_SIZE));
+  const paginatedRequests = filteredRequests.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+
+  const handleExportCsv = () => {
+    downloadCsv(
+      ["Request ID", "Employee", "Employee Email", "Employee ID", "Leave Type",
+       "From Date", "To Date", "Requested Days", "Applied On", "Status",
+       "Reason", "Reviewer Comment"],
+      filteredRequests.map((request) => [
+        request.id, request.employee, request.email, request.employeeId,
+        request.leaveType, request.fromDate, request.toDate, request.requestedDays,
+        request.appliedOn, request.status, request.reason, request.reviewComment,
+      ]),
+      "leave-requests-report.csv"
+    );
+  };
 
   const openRequestDetails = (request) => {
     setSelectedRequest(request);
@@ -232,17 +306,54 @@ const LeaveRequests = () => {
               </p>
             </div>
 
-            <label className="input input-bordered flex items-center gap-2">
-              <FiSearch className="text-base-content/50" />
+            <div className="flex flex-wrap items-center gap-2">
+              <label className="input input-bordered flex items-center gap-2">
+                <FiSearch className="text-base-content/50" />
+                <input type="text" placeholder="Search employee..." value={search}
+                  onChange={(e) => setSearch(e.target.value)} className="w-36 sm:w-52" />
+              </label>
 
-              <input
-                type="text"
-                placeholder="Search employee..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-36 sm:w-52"
-              />
-            </label>
+              <label className="flex flex-col gap-1 text-xs text-base-content/60">
+                <span>Applied from</span>
+                <input
+                  type="date"
+                  value={appliedFromDate}
+                  max={appliedToDate || undefined}
+                  onChange={(e) => setAppliedFromDate(e.target.value)}
+                  className="input input-bordered input-sm"
+                />
+              </label>
+
+              <label className="flex flex-col gap-1 text-xs text-base-content/60">
+                <span>Applied to</span>
+                <input
+                  type="date"
+                  value={appliedToDate}
+                  min={appliedFromDate || undefined}
+                  onChange={(e) => setAppliedToDate(e.target.value)}
+                  className="input input-bordered input-sm"
+                />
+              </label>
+
+              {(appliedFromDate || appliedToDate) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAppliedFromDate("");
+                    setAppliedToDate("");
+                  }}
+                  className="btn btn-sm btn-ghost"
+                >
+                  Clear dates
+                </button>
+              )}
+
+              <button type="button" onClick={handleExportCsv}
+                disabled={filteredRequests.length === 0}
+                className="btn border-none bg-emerald-600 text-white hover:bg-emerald-700">
+                <FiDownload size={17} /> Export CSV
+              </button>
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-2 px-5 pt-4">
             {["All", "Pending", "Approved", "Rejected"].map((status) => (
@@ -287,7 +398,7 @@ const LeaveRequests = () => {
                 </button>
               </div>
             ) : filteredRequests.length > 0 ? (
-              filteredRequests.map((request) => (
+              paginatedRequests.map((request) => (
                 <button
                   key={request.id}
                   onClick={() => openRequestDetails(request)}
@@ -338,10 +449,22 @@ const LeaveRequests = () => {
 
           </div>
 
-          <div className="border-t border-base-300 px-5 py-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-base-300 px-5 py-4">
             <p className="text-sm text-base-content/60">
-              Showing {filteredRequests.length} of {totalRequests} requests
+              Showing {filteredRequests.length ? (currentPage - 1) * PAGE_SIZE + 1 : 0}–
+              {Math.min(currentPage * PAGE_SIZE, filteredRequests.length)} of {filteredRequests.length} filtered requests
             </p>
+            <div className="join">
+              <button type="button" className="btn btn-sm join-item"
+                disabled={currentPage === 1 || loading}
+                onClick={() => setCurrentPage((page) => page - 1)}>Previous</button>
+              <button type="button" className="btn btn-sm join-item no-animation">
+                Page {currentPage} of {totalPages}
+              </button>
+              <button type="button" className="btn btn-sm join-item"
+                disabled={currentPage === totalPages || loading}
+                onClick={() => setCurrentPage((page) => page + 1)}>Next</button>
+            </div>
           </div>
         </div>
       </div>

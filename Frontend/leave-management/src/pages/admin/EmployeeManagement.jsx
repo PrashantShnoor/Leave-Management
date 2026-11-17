@@ -7,19 +7,44 @@ import {
   FiUserX,
   FiSearch,
   FiEye,
+  FiDownload,
 } from "react-icons/fi";
 
 import SummaryCard from "../../components/common/SummaryCard";
 import DataTable from "../../components/common/DataTable";
-import StatusBadge from "../../components/common/StatusBadge";
 import EmployeeDetails from "../../components/admin/EmployeeDetails";
 import BASE_URL from "../../utils/constants";
+
+const PAGE_SIZE = 10;
+
+const downloadCsv = (headers, rows, filename) => {
+  const escapeValue = (value) =>
+    `"${String(value ?? "").replace(/"/g, '""')}"`;
+
+  const csv = [headers, ...rows]
+    .map((row) => row.map(escapeValue).join(","))
+    .join("\r\n");
+
+  const blob = new Blob(["\uFEFF", csv], {
+    type: "text/csv;charset=utf-8;",
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+
 
 const EmployeeManagement = () => {
   const [employees, setEmployees] = useState([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -75,6 +100,31 @@ const EmployeeManagement = () => {
       return matchesSearch && matchesStatus;
     });
   }, [employees, search, statusFilter]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredEmployees.length / PAGE_SIZE));
+  const paginatedEmployees = filteredEmployees.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+
+  const handleExportCsv = () => {
+    downloadCsv(
+      ["Employee ID", "First Name", "Last Name", "Email", "Role", "Status"],
+      filteredEmployees.map((employee) => [
+        employee.id,
+        employee.first_name,
+        employee.last_name,
+        employee.email,
+        employee.role,
+        employee.is_active ? "Active" : "Inactive",
+      ]),
+      "employee-records.csv"
+    );
+  };
 
 
   const columns = [
@@ -170,15 +220,25 @@ const EmployeeManagement = () => {
               />
             </div>
 
-            <select
-              className="select select-bordered w-full md:w-48"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="all">All Employees</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <select
+                className="select select-bordered w-full md:w-48"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <option value="all">All Employees</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+              <button
+                type="button"
+                onClick={handleExportCsv}
+                disabled={filteredEmployees.length === 0}
+                className="btn border-none bg-green-700 text-white hover:bg-green-800"
+              >
+                <FiDownload size={17} /> Export CSV
+              </button>
+            </div>
           </div>
 
           <div>
@@ -192,7 +252,20 @@ const EmployeeManagement = () => {
               </span>
             </div>
 
-            <DataTable columns={columns} data={filteredEmployees} emptyMessage="No employees match your search." />
+            <DataTable columns={columns} data={paginatedEmployees} emptyMessage="No employees match your search." />
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm text-gray-500">
+                Showing {filteredEmployees.length ? (currentPage - 1) * PAGE_SIZE + 1 : 0}–
+                {Math.min(currentPage * PAGE_SIZE, filteredEmployees.length)} of {filteredEmployees.length} employees
+              </p>
+              <div className="join">
+                <button className="btn btn-sm join-item" disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((page) => page - 1)}>Previous</button>
+                <button className="btn btn-sm join-item no-animation">Page {currentPage} of {totalPages}</button>
+                <button className="btn btn-sm join-item" disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage((page) => page + 1)}>Next</button>
+              </div>
+            </div>
           </div>
         </>
       )}
