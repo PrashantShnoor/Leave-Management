@@ -42,6 +42,7 @@ leaveBalanceRoute.post("/createLeavebalance" ,authMiddleware , async (req , res)
         
         const values = [ employee_id , leave_type_id , leave_year , allocated_days ];
         const result = await client.query(query , values);
+        const balance = result.rows[0];
 
         const leaveTypeResult = await client.query( `
         SELECT type
@@ -49,6 +50,39 @@ leaveBalanceRoute.post("/createLeavebalance" ,authMiddleware , async (req , res)
         WHERE id = ${leave_type_id}
         `)
         const leaveType = leaveTypeResult.rows[0].type;
+        await client.query(
+            `
+                INSERT INTO activity_logs
+                    (
+                        action,
+                        performed_by,
+                        employee_id,
+                        description,
+                        entity_type,
+                        entity_id,
+                        old_value,
+                        new_value
+                    )
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            `,
+            [
+                "BALANCE_ASSIGNED",
+                req.user.id,
+                Number(employee_id),
+                `${allocated_days} days of ${leaveType} assigned to employee #${employee_id} for ${leave_year}.`,
+                "leave_balance",
+                balance.id,
+                null,
+                JSON.stringify({
+                    employee_id: Number(employee_id),
+                    leave_type_id: Number(leave_type_id),
+                    leave_type: leaveType,
+                    leave_year: Number(leave_year),
+                    allocated_days: Number(allocated_days),
+                    used_days: Number(balance.used_days)
+                })
+            ]
+        );
 
         const notification = await saveNotification(client , {
             recipient_id : employee_id,

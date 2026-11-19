@@ -25,6 +25,7 @@ import HrAccounts from "./pages/admin/HrAccounts";
 import LeaveRequests from "./pages/admin/LeaveRequests";
 import LeaveAvailability from "./pages/hr/LeaveAvailability";
 import LeaveReport from "./pages/employee/LeaveReport";
+import ActivityLogs from "./pages/hr/ActivityLogs";
 
 
 function App() {
@@ -43,7 +44,8 @@ function App() {
             <Route path="create-employee" element={<CreateEmployee />}/>
             <Route path="hr-accounts" element={<HrAccounts />}/>
             <Route path="leaveRequests" element={<LeaveRequests />}/>
-            <Route path="leave-availability" element={<LeaveAvailability />} />
+            <Route path="leave-availability" element={<LeaveAvailability />}/>
+            <Route path="activity-logs" element={<ActivityLogs />}/>
           </Route>
         </Route>
 
@@ -57,6 +59,7 @@ function App() {
             <Route path="leave-types" element={<LeaveTypes />} />
             <Route path="leave-availability" element={<LeaveAvailability />}/>
             <Route path="reports" element={<Reports />} />
+            <Route path="activity-logs" element={<ActivityLogs />}/>
 
           </Route>
         </Route>

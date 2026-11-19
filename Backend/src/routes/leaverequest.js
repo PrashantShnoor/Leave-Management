@@ -95,6 +95,38 @@ leaveRequestRoutes.post("/createLeave",authMiddleware , async (req, res) => {
 
     const employeeName = `${employeeResult.rows[0].first_name} ${employeeResult.rows[0].last_name}`;
 
+    const activityQuery = `
+      INSERT INTO activity_logs
+      (
+        action,
+        performed_by,
+        employee_id,
+        description,
+        entity_type,
+        entity_id,
+        new_value
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb)
+    `;
+
+    const activityValues = [
+      "LEAVE_APPLIED",
+      employee_id,
+      employee_id,
+      `${employeeName} applied for ${Number(requested_days)} day(s) of leave.`,
+      "leave_request",
+      leave.id,
+      JSON.stringify({
+        leave_type_id: Number(leave_type_id),
+        start_date,
+        end_date,
+        requested_days: Number(requested_days),
+        status: leave.status,
+      }),
+    ];
+
+    await client.query(activityQuery, activityValues);
+
     const recipientsResult = await client.query(`
       SELECT id
       FROM employees
@@ -130,6 +162,8 @@ leaveRequestRoutes.post("/createLeave",authMiddleware , async (req, res) => {
     return res.status(500).json({
       message: "Internal server error",
     });
+  } finally {
+    if (client) client.release();
   }
 });
 
@@ -279,6 +313,10 @@ leaveRequestRoutes.patch("/approveLeave/:id", authMiddleware, async (req, res) =
       });
     }
 
+    const previousUsedDays = Number(balance.used_days);
+
+    const newUsedDays =previousUsedDays + Number(leave.requested_days);
+
     await client.query(
       `UPDATE employee_leave_balance
        SET used_days = used_days + $1,
@@ -301,6 +339,43 @@ leaveRequestRoutes.patch("/approveLeave/:id", authMiddleware, async (req, res) =
        RETURNING *`,
       [reviewer_id, reviewer_comment || null, Number(id)]
     );
+
+    const activityQuery = `
+      INSERT INTO activity_logs
+      (
+        action,
+        performed_by,
+        employee_id,
+        description,
+        entity_type,
+        entity_id,
+        old_value,
+        new_value
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8::jsonb)
+    `;
+
+    const activityValues = [
+      "LEAVE_APPROVED",
+      reviewer_id,
+      leave.employee_id,
+      `Leave request #${id} was approved by user #${reviewer_id}.`,
+      "leave_request",
+      Number(id),
+      JSON.stringify({
+        status: "pending",
+        used_days: previousUsedDays,
+      }),
+      JSON.stringify({
+        status: "approved",
+        used_days: newUsedDays,
+        reviewer_comment: reviewer_comment || null,
+        leave_type_id: Number(leave.leave_type_id),
+        requested_days: Number(leave.requested_days),
+      }),
+    ];
+
+    await client.query(activityQuery, activityValues);
 
     notification = await saveNotification(client, {
       recipient_id: leave.employee_id,
@@ -394,6 +469,42 @@ leaveRequestRoutes.patch("/rejectLeave/:id", authMiddleware, async (req, res) =>
        RETURNING *`,
       [reviewer_id, reviewer_comment || null, Number(id)]
     );
+
+    const activityQuery = `
+      INSERT INTO activity_logs
+      (
+        action,
+        performed_by,
+        employee_id,
+        description,
+        entity_type,
+        entity_id,
+        old_value,
+        new_value
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8::jsonb)
+    `;
+
+    const activityValues = [
+      "LEAVE_REJECTED",
+      reviewer_id,
+      leave.employee_id,
+      `Leave request #${id} was rejected by user #${reviewer_id}.`,
+      "leave_request",
+      Number(id),
+      JSON.stringify({
+        status: "pending",
+      }),
+      JSON.stringify({
+        status: "rejected",
+        reviewer_comment: reviewer_comment || null,
+        leave_type_id: Number(leave.leave_type_id),
+        requested_days: Number(leave.requested_days),
+      }),
+    ];
+
+    await client.query(activityQuery, activityValues);
+
 
     const notification = await saveNotification(client, {
       recipient_id: leave.employee_id,
