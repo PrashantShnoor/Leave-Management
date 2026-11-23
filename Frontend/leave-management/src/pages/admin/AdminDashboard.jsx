@@ -183,8 +183,6 @@ const AdminDashboard = () => {
           ))}
         </div>
       </section>
-
-
       <section>
         <h2 className="mb-4 text-lg font-semibold text-gray-800">
           Leave Overview
@@ -205,8 +203,7 @@ const AdminDashboard = () => {
             Recent Activities
           </h2>
         </div>
-
-        
+  
       </section>
       <div className="rounded-xl border border-green-100 bg-green-50 p-5">
         <h3 className="font-semibold text-green-900">

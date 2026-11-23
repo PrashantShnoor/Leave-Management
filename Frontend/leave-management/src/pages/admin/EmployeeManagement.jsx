@@ -58,20 +58,15 @@ const EmployeeManagement = () => {
       setLoading(true);
       setError("");
 
-      const response = await axios.get(
-        `${BASE_URL}/getAllEmployees`,
-        {
-          withCredentials: true,
-        }
+      const response = await axios.get(`${BASE_URL}/getAllEmployees`,
+        {withCredentials: true,}
       );
-
       setEmployees(response.data.data || []);
     } catch (error) {
       console.error(
         "Error fetching employees:",
         error.response?.data || error
       );
-
       setError(
         error.response?.data?.message ||
         "Failed to fetch employees."
@@ -83,11 +78,8 @@ const EmployeeManagement = () => {
 
   const filteredEmployees = useMemo(() => {
     return employees.filter((employee) => {
-      const fullName =
-        `${employee.first_name} ${employee.last_name}`.toLowerCase();
-
+      const fullName =`${employee.first_name} ${employee.last_name}`.toLowerCase();
       const searchValue = search.toLowerCase();
-
       const matchesSearch =
         fullName.includes(searchValue) ||
         employee.email.toLowerCase().includes(searchValue);

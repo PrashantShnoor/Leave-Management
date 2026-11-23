@@ -143,68 +143,45 @@ const Dashboard = () => {
   return (
     <div className="space-y-10">
 
-      {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-
         {summaryCards.map((card, index) => (
-          <div
-            key={index}
-            className="card bg-base-100 shadow-md"
-          >
+          <div key={index} className="card bg-base-100 shadow-md">
             <div className="card-body flex-row items-center justify-between p-4">
-
               <div className={`${card.color} text-success-content rounded-sm px-3 py-1 text-center`}>
                 <h2 className="text-4xl font-semibold">
                   {card.value}
                 </h2>
                 <p className="text-xs uppercase">Days</p>
               </div>
-
               <div className="flex-1 ml-3">
                 <h3 className="text-base font-medium leading-tight text-primary">
                   {card.title}
                 </h3>
               </div>
-
               {index === 0 && (
-                <button
-                  className="btn btn-outline btn-primary btn-sm"
-                  onClick={() => navigate("/employee/leaves")}
-                >
+                <button className="btn btn-outline btn-primary btn-sm" onClick={() => navigate("/employee/leaves")} >
                   Apply
                 </button>
               )}
-
             </div>
           </div>
         ))}
-
       </div>
-
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-
         {leaveSections.map((section) => (
           <div key={section.key}>
-
             <ul className="list bg-base-100 rounded-box shadow-md">
-
               <li className="p-4 pb-2 text-xs opacity-60 tracking-wide">
                 {section.title}
               </li>
-
               {leaveTypes.map((leave) => (
-                <li
-                  key={leave.id}
-                  className="list-row"
-                >
-
+                <li key={leave.id} className="list-row">
                   <div className={`${section.color} text-success-content rounded-sm px-3 py-1 text-center`}>
                     <h2 className="text-2xl font-semibold">
                       {leave[section.key] ?? "—"}
                     </h2>
                     <p className="text-xs uppercase">Days</p>
                   </div>
-
                   <div>
                     <div>{leave.name}</div>
 
@@ -224,16 +201,11 @@ const Dashboard = () => {
                   No leave balances found.
                 </li>
               )}
-
             </ul>
-
           </div>
         ))}
-
       </div>
-
     </div>
   );
 };
-
 export default Dashboard;

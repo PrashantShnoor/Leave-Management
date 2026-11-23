@@ -1,4 +1,3 @@
-
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 
@@ -19,7 +18,6 @@ const Reports = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Leave type ID mapping from your database
   const leaveTypeNames = {
     1: "Annual Leave",
     2: "Sick Leave",
@@ -27,26 +25,17 @@ const Reports = () => {
     4: "Leave Without Pay",
   };
 
-  // Fetch all leave requests
   const fetchLeaveRecords = async () => {
     try {
       setLoading(true);
       setError("");
 
-      const response = await axios.get(
-        `${BASE_URL}/getAllrequest`
-      );
-
+      const response = await axios.get(`${BASE_URL}/getAllrequest` );
       const requests = response.data.leave_requests || [];
-
       setLeaveRecords(requests);
     } catch (error) {
       console.error("Fetch Leave Reports Error:", error);
-
-      setError(
-        error.response?.data?.message ||
-          "Unable to fetch leave reports."
-      );
+      setError( error.response?.data?.message ||"Unable to fetch leave reports.");
     } finally {
       setLoading(false);
     }
@@ -56,14 +45,11 @@ const Reports = () => {
     fetchLeaveRecords();
   }, []);
 
-  // Format backend status
   const formatStatus = (value) => {
     if (!value) return "Unknown";
-
     return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
   };
 
-  // Format date without changing the calendar day
   const formatDate = (date) => {
     if (!date) return "N/A";
 
@@ -79,7 +65,6 @@ const Reports = () => {
     });
   };
 
-  // Summary calculations using ALL requests
   const totalRequests = leaveRecords.length;
 
   const approvedCount = leaveRecords.filter(
@@ -90,7 +75,6 @@ const Reports = () => {
     (record) => record.status?.toLowerCase() === "pending"
   ).length;
 
-  // Search and filter leave requests
   const filteredRecords = useMemo(() => {
     const searchValue = search.trim().toLowerCase();
 
@@ -103,11 +87,7 @@ const Reports = () => {
       const employeeName = (record.employee_name || "").toLowerCase();
       const employeeEmail = (record.employee_email || "").toLowerCase();
 
-      const leaveType =
-        (
-          leaveTypeNames[record.leave_type_id] ||
-          `Leave Type #${record.leave_type_id}`
-        ).toLowerCase();
+      const leaveType = (leaveTypeNames[record.leave_type_id] ||`Leave Type #${record.leave_type_id}`).toLowerCase();
 
       const matchesSearch =
         employeeName.includes(searchValue) ||
@@ -119,17 +99,13 @@ const Reports = () => {
     });
   }, [leaveRecords, search, status]);
 
-  // Show only the 7 most recent requests
-  // Backend already orders requests by created_at DESC
   const recentRecords = filteredRecords.slice(0, 7);
 
-  // Calculate total leave days in the displayed records
   const totalDays = recentRecords.reduce(
     (total, record) => total + Number(record.requested_days || 0),
     0
   );
 
-  // Export filtered records as CSV
   const exportCSV = () => {
     if (filteredRecords.length === 0) {
       alert("No leave records available to export.");
@@ -149,17 +125,15 @@ const Reports = () => {
     const rows = filteredRecords.map((record) => [
       record.employee_name || "N/A",
       record.employee_email || "N/A",
-      leaveTypeNames[record.leave_type_id] ||
-        `Leave Type #${record.leave_type_id}`,
+      leaveTypeNames[record.leave_type_id] || `Leave Type #${record.leave_type_id}`,
       formatDate(record.start_date),
       formatDate(record.end_date),
       Number(record.requested_days || 0),
       formatStatus(record.status),
     ]);
 
-    const csvContent = [headers, ...rows]
-      .map((row) =>
-        row
+    const csvContent = [headers, ...rows].map((row) =>
+      row
           .map((value) => `"${String(value).replace(/"/g, '""')}"`)
           .join(",")
       )
@@ -179,7 +153,6 @@ const Reports = () => {
     URL.revokeObjectURL(url);
   };
 
-  // Status badge styling
   const getStatusClass = (value) => {
     const normalizedStatus = value?.toLowerCase();
 
@@ -204,8 +177,6 @@ const Reports = () => {
 
   return (
     <div className="space-y-6">
-
-      {/* Page Heading */}
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">
@@ -227,10 +198,8 @@ const Reports = () => {
         </button>
       </div>
 
-      {/* Summary Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
 
-        {/* Total Requests */}
         <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
@@ -247,7 +216,6 @@ const Reports = () => {
           </div>
         </div>
 
-        {/* Approved Requests */}
         <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
@@ -264,7 +232,6 @@ const Reports = () => {
           </div>
         </div>
 
-        {/* Pending Requests */}
         <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
@@ -283,7 +250,6 @@ const Reports = () => {
 
       </div>
 
-      {/* Reports Table */}
       <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
 
         <div className="mb-5">
@@ -296,7 +262,6 @@ const Reports = () => {
           </p>
         </div>
 
-        {/* Search and Filter */}
         <div className="mb-5 flex flex-col gap-3 md:flex-row">
 
           <input
@@ -320,7 +285,6 @@ const Reports = () => {
           </select>
         </div>
 
-        {/* Total Days */}
         <div className="mb-5 rounded-lg bg-green-50 p-4">
           <p className="text-sm text-green-800">
             <span className="font-semibold">
@@ -330,14 +294,12 @@ const Reports = () => {
           </p>
         </div>
 
-        {/* Loading */}
         {loading && (
           <div className="flex justify-center py-12">
             <span className="loading loading-spinner loading-lg text-green-600"></span>
           </div>
         )}
 
-        {/* Error */}
         {!loading && error && (
           <div className="rounded-lg border border-red-200 bg-red-50 p-4">
             <p className="text-sm text-red-600">{error}</p>
@@ -351,7 +313,6 @@ const Reports = () => {
           </div>
         )}
 
-        {/* Table */}
         {!loading && !error && (
           <div className="overflow-x-auto">
             <table className="table">
@@ -381,19 +342,10 @@ const Reports = () => {
                           {record.employee_email || "N/A"}
                         </p>
                       </td>
-
-                      <td>
-                        {leaveTypeNames[record.leave_type_id] ||
-                          `Leave Type #${record.leave_type_id}`}
-                      </td>
-
+                      <td>{leaveTypeNames[record.leave_type_id] || `Leave Type #${record.leave_type_id}`}</td>
                       <td>{formatDate(record.start_date)}</td>
-
                       <td>{formatDate(record.end_date)}</td>
-
-                      <td>
-                        {Number(record.requested_days || 0)}
-                      </td>
+                      <td>{Number(record.requested_days || 0)}</td>
 
                       <td>
                         <span
@@ -410,10 +362,7 @@ const Reports = () => {
 
                 {recentRecords.length === 0 && (
                   <tr>
-                    <td
-                      colSpan="6"
-                      className="py-8 text-center text-gray-500"
-                    >
+                    <td colSpan="6" className="py-8 text-center text-gray-500">
                       No leave records found.
                     </td>
                   </tr>

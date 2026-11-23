@@ -78,31 +78,23 @@ const Manage = () => {
         employee: request.employee_name,
         email: request.employee_email,
         employeeId: request.employee_id,
-
-        leaveType:
-          leaveTypeNames[request.leave_type_id] ||
-          `Leave Type #${request.leave_type_id}`,
-
+        leaveType: leaveTypeNames[request.leave_type_id] || `Leave Type #${request.leave_type_id}`,
         fromDate: request.start_date,
         toDate: request.end_date,
         requestedDays: Number(request.requested_days),
-
         appliedOn: request.created_at,
         reason: request.reason,
         status: formatStatus(request.status),
         reviewComment: request.reviewer_comment || "",
       }));
       setRequests(formattedRequests);
-
       return formattedRequests;
     } catch (err) {
       console.error("Error fetching leave requests:", err);
-
       setError(
         err.response?.data?.message ||
           "Unable to fetch leave requests. Please try again."
       );
-
       throw err;
     }
   };
@@ -116,20 +108,15 @@ const Manage = () => {
         setLoading(false);
       }
     };
-
     loadRequests();
   }, []);
-
   const totalRequests = requests.length;
-
   const pendingRequests = requests.filter(
     (request) => request.status === "Pending"
   ).length;
-
   const approvedRequests = requests.filter(
     (request) => request.status === "Approved"
   ).length;
-
   const rejectedRequests = requests.filter(
     (request) => request.status === "Rejected"
   ).length;
@@ -144,8 +131,7 @@ const Manage = () => {
         request.leaveType.toLowerCase().includes(searchValue) ||
         request.reason.toLowerCase().includes(searchValue);
 
-      const matchesStatus =
-        statusFilter === "All" || request.status === statusFilter;
+      const matchesStatus = statusFilter === "All" || request.status === statusFilter;
 
       return matchesSearch && matchesStatus;
     });
@@ -171,10 +157,7 @@ const Manage = () => {
       setActionLoading(true);
       setError("");
 
-      const endpoint =
-        decision === "Approved"
-          ? `/approveLeave/${selectedRequest.id}`
-          : `/rejectLeave/${selectedRequest.id}`;
+      const endpoint = decision === "Approved" ? `/approveLeave/${selectedRequest.id}` : `/rejectLeave/${selectedRequest.id}`;
 
       const response = await axios.patch(`${BASE_URL}${endpoint}`,
         {
@@ -187,8 +170,6 @@ const Manage = () => {
       if (!response.data.leave) {
         throw new Error("The server did not return the updated leave request.");
       }
-
-     
       await fetchRequests();
 
       setSelectedRequest(null);
@@ -266,7 +247,6 @@ const Manage = () => {
           </div>
 
           <div className="space-y-3 p-5">
-
             {loading ? (
               <div className="flex justify-center py-12">
                 <span className="loading loading-spinner loading-lg text-primary"></span>
@@ -281,9 +261,8 @@ const Manage = () => {
                     try {
                       setLoading(true);
                       await fetchRequests();
-                    } catch {
-                      // Error is displayed by fetchRequests.
-                    } finally {
+                    } catch {} 
+                    finally {
                       setLoading(false);
                     }
                   }}
@@ -307,7 +286,6 @@ const Manage = () => {
                       <h3 className="font-semibold text-base-content">
                         {request.employee}
                       </h3>
-
                     </div>
                   </div>
 
@@ -316,21 +294,17 @@ const Manage = () => {
                       <p className="text-xs text-base-content/50"> Leave Type </p>
                       <p className="text-sm font-medium"> {request.leaveType} </p>
                     </div>
-
                     <div>
                       <p className="text-xs text-base-content/50"> Duration </p>
                       <p className="text-sm font-medium"> {request.requestedDays} Days </p>
                     </div>
-
                     <div>
                       <p className="text-xs text-base-content/50"> Applied On </p>
                       <p className="text-sm font-medium"> {formatDate(request.appliedOn)} </p>
                     </div>
-
                     <span className={`badge border-none font-semibold ${statusClasses[request.status] }`}>
                       {request.status}
                     </span>
-
                     <FiFileText className="text-base-content/50" size={20} />
                   </div>
                 </button>
@@ -340,9 +314,7 @@ const Manage = () => {
                 No leave requests found.
               </div>
             )}
-
           </div>
-
           <div className="border-t border-base-300 px-5 py-4">
             <p className="text-sm text-base-content/60">
               Showing {filteredRequests.length} of {totalRequests} requests
@@ -350,7 +322,6 @@ const Manage = () => {
           </div>
         </div>
       </div>
-
       {selectedRequest && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-950/50 p-4 backdrop-blur-sm"

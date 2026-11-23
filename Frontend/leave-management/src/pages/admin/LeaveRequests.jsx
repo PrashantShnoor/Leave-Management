@@ -184,7 +184,6 @@ const LeaveRequests = () => {
       const matchesStatus =
         statusFilter === "All" || request.status === statusFilter;
 
-      // Date-wise filtering is based on the date the employee submitted the request.
       const appliedDate = getLocalDateValue(request.appliedOn);
       const matchesFromDate =
         !appliedFromDate || (appliedDate && appliedDate >= appliedFromDate);
@@ -387,9 +386,8 @@ const LeaveRequests = () => {
                     try {
                       setLoading(true);
                       await fetchRequests();
-                    } catch {
-                      // Error is displayed by fetchRequests.
-                    } finally {
+                    } catch {}
+                    finally {
                       setLoading(false);
                     }
                   }}

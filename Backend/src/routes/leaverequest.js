@@ -4,6 +4,7 @@ import authMiddleware  from "../middleware/auth.js";
 import bcrypt from "bcrypt";
 import { saveNotification , emitNotification } from "../utils/notifications.js";
 const leaveRequestRoutes = express.Router();
+import { validateApproveLeave , validateRejectLeave } from "../utils/validator.js";
 
 
 leaveRequestRoutes.post("/createLeave",authMiddleware , async (req, res) => {
@@ -245,19 +246,11 @@ leaveRequestRoutes.patch("/approveLeave/:id", authMiddleware, async (req, res) =
   let notification;
 
   try {
-   
+    validateApproveLeave(req);
+
     const { id } = req.params;
     const reviewer_id = req.user.id;
-    const reviewer_comment =
-      typeof req.body.reviewer_comment === "string"
-        ? req.body.reviewer_comment.trim()
-        : "";
-
-    if (!Number.isInteger(Number(id)) || Number(id) <= 0) {
-      return res.status(400).json({
-        message: "Invalid leave request ID",
-      });
-    }
+    const reviewer_comment = req.body.reviewer_comment || "";
 
     client = await pool.connect();
 
@@ -273,6 +266,9 @@ leaveRequestRoutes.patch("/approveLeave/:id", authMiddleware, async (req, res) =
     );
 
     if (leaveResult.rows.length === 0) {
+      await client.query("ROLLBACK");
+      transactionStarted = false;
+
       return res.status(404).json({
         message: "Leave request not found",
       });
@@ -281,6 +277,9 @@ leaveRequestRoutes.patch("/approveLeave/:id", authMiddleware, async (req, res) =
     const leave = leaveResult.rows[0];
 
     if (String(leave.status).toLowerCase() !== "pending") {
+      await client.query("ROLLBACK");
+      transactionStarted = false;
+
       return res.status(400).json({
         message: "Only pending leave requests can be approved",
       });
@@ -295,6 +294,9 @@ leaveRequestRoutes.patch("/approveLeave/:id", authMiddleware, async (req, res) =
     );
 
     if (balanceResult.rows.length === 0) {
+      await client.query("ROLLBACK");
+      transactionStarted = false;
+
       return res.status(400).json({
         message: "Leave balance not found",
       });
@@ -306,6 +308,9 @@ leaveRequestRoutes.patch("/approveLeave/:id", authMiddleware, async (req, res) =
       Number(balance.allocated_days) - Number(balance.used_days);
 
     if (Number(leave.requested_days) > availableBalance) {
+      await client.query("ROLLBACK");
+      transactionStarted = false;
+
       return res.status(400).json({
         message: "Insufficient leave balance to approve this request",
         available_balance: availableBalance,
@@ -339,7 +344,6 @@ leaveRequestRoutes.patch("/approveLeave/:id", authMiddleware, async (req, res) =
        RETURNING *`,
       [reviewer_id, reviewer_comment || null, Number(id)]
     );
-
     const activityQuery = `
       INSERT INTO activity_logs
       (
@@ -398,14 +402,17 @@ leaveRequestRoutes.patch("/approveLeave/:id", authMiddleware, async (req, res) =
   } catch (error) {
     if (transactionStarted && client) {
       await client.query("ROLLBACK");
+      transactionStarted = false;
     }
-
+    if (error.message === "Invalid leave request ID" || error.message === "Reviewer comment must be a string") {
+      return res.status(400).json({
+        message: error.message,
+      });
+    }
     console.error("Error approving leave:", error);
-
     return res.status(500).json({
       message: "Internal server error",
     });
-
   } finally {
     if (client) client.release();
   }
@@ -416,7 +423,7 @@ leaveRequestRoutes.patch("/rejectLeave/:id", authMiddleware, async (req, res) =>
   let transactionStarted = false;
 
   try {
-    
+    validateRejectLeave(req);
 
     const { id } = req.params;
     const reviewer_id = req.user.id;
@@ -425,12 +432,6 @@ leaveRequestRoutes.patch("/rejectLeave/:id", authMiddleware, async (req, res) =>
       typeof req.body.reviewer_comment === "string"
         ? req.body.reviewer_comment.trim()
         : "";
-
-    if (!Number.isInteger(Number(id)) || Number(id) <= 0) {
-      return res.status(400).json({
-        message: "Invalid leave request ID",
-      });
-    }
 
     client = await pool.connect();
 
@@ -446,6 +447,9 @@ leaveRequestRoutes.patch("/rejectLeave/:id", authMiddleware, async (req, res) =>
     );
 
     if (leaveResult.rows.length === 0) {
+      await client.query("ROLLBACK");
+      transactionStarted = false;
+
       return res.status(404).json({
         message: "Leave request not found",
       });
@@ -454,6 +458,9 @@ leaveRequestRoutes.patch("/rejectLeave/:id", authMiddleware, async (req, res) =>
     const leave = leaveResult.rows[0];
 
     if (String(leave.status).toLowerCase() !== "pending") {
+      await client.query("ROLLBACK");
+      transactionStarted = false;
+
       return res.status(400).json({
         message: "Only pending leave requests can be rejected",
       });
@@ -505,7 +512,6 @@ leaveRequestRoutes.patch("/rejectLeave/:id", authMiddleware, async (req, res) =>
 
     await client.query(activityQuery, activityValues);
 
-
     const notification = await saveNotification(client, {
       recipient_id: leave.employee_id,
       leave_request_id: Number(id),
@@ -529,14 +535,17 @@ leaveRequestRoutes.patch("/rejectLeave/:id", authMiddleware, async (req, res) =>
   } catch (error) {
     if (transactionStarted && client) {
       await client.query("ROLLBACK");
+      transactionStarted = false;
     }
-
+    if (error.message === "Invalid leave request ID") {
+      return res.status(400).json({
+        message: error.message,
+      });
+    }
     console.error("Error rejecting leave:", error);
-
     return res.status(500).json({
       message: "Internal server error",
     });
-
   } finally {
     if (client) client.release();
   }
