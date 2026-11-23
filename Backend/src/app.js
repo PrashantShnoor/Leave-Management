@@ -17,6 +17,7 @@ import leaveTypeRoutes from "./routes/leavetype.js";
 import notificationRoutes from "./routes/notifications.js";
 
 import { initializeSocket } from "./config/socket.js"
+import activityLogRoute from "./routes/activityLog.js";
 
 dotenv.config();
 
@@ -42,6 +43,7 @@ app.use("/", leaveBalanceRoute);
 app.use("/" , leaveRequestRoutes);
 app.use("/", leaveTypeRoutes);
 app.use("/notifications", notificationRoutes);
+app.use("/" , activityLogRoute);
 
 connectDB()
   .then(() => {

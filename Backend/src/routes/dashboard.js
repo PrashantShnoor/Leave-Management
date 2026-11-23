@@ -102,7 +102,6 @@ dashboardRoutes.get("/getAdminDashboard", authMiddleware, async (req, res) => {
 
 dashboardRoutes.get("/hrDashboardSummary", authMiddleware, async (req, res) => {
   try {
-    // Only HR and Admin can access this dashboard summary
     const role = req.user?.role?.toLowerCase();
 
     if (role !== "hr" && role !== "admin") {

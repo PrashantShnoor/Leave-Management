@@ -11,6 +11,7 @@ import {
   FiUser,
   FiMenu,
 } from "react-icons/fi";
+import { RxActivityLog } from "react-icons/rx";
 import { FaCalendarAlt } from "react-icons/fa";
 import NotificationBell from "../components/common/Notificationbell";
 import useNotifications from "../hooks/notifications";
@@ -18,7 +19,6 @@ import useNotifications from "../hooks/notifications";
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
-
   const adminName = localStorage.getItem("first_name") || "Admin";
 
   const navigationGroups = [
@@ -63,9 +63,19 @@ const AdminLayout = () => {
         {
           name: "Leave Availability",
           path: "/admin/leave-availability",
-          icon: FaCalendarAlt 
+          icon: FaCalendarAlt,
         },
       ],
+    },
+    {
+      title : "REPORT",
+      items : [
+        {
+          name : "Activity Logs",
+          path : "/admin/activity-logs",
+          icon : RxActivityLog,
+        },
+      ]
     },
   ];
 
@@ -90,8 +100,6 @@ const AdminLayout = () => {
     if (!notification.is_read) {
       await markAsRead(notification.id);
     }
-
-    // We can add navigation to the related leave request here.
   };
 
   return (

@@ -3,6 +3,7 @@ import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { FaCalendarDay, FaHome } from "react-icons/fa";
 import { BiBuoy, BiCalendarCheck } from "react-icons/bi";
 import { FaUsers, FaCalendarAlt, FaChartBar } from "react-icons/fa";
+import { RxActivityLog } from "react-icons/rx";
 import { MdAccountBalance } from "react-icons/md";
 import axios from "axios";
 import NotificationBell from "../components/common/Notificationbell";
@@ -74,6 +75,11 @@ const EmployeeHrLayout = () => {
       name: "Reports",
       path: "/hr/reports",
       icon: <FaChartBar className="size-6" />,
+    },
+    {
+      name : "Activity Logs",
+      path : "/hr/activity-logs",
+      icon : <RxActivityLog className="size-6" />,
     },
   ];
 

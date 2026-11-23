@@ -67,15 +67,15 @@ const LeaveBalances = () => {
     return [];
   };
 
-    const getTodayDate = () => {
-      const today = new Date();
+  const getTodayDate = () => {
+    const today = new Date();
 
-      const year = today.getFullYear();
-      const month = String(today.getMonth() + 1).padStart(2, "0");
-      const day = String(today.getDate()).padStart(2, "0");
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
 
-      return `${year}-${month}-${day}`;
-    };
+    return `${year}-${month}-${day}`;
+  };
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -117,7 +117,6 @@ const LeaveBalances = () => {
     );
   });
 
-  // Export all employees' leave balances, including unassigned leave types as zero.
   const handleExportCsv = () => {
     if (employees.length === 0 || leaveTypes.length === 0) {
       showMessage("warning", "There is no employee or leave type data to export.");
@@ -139,7 +138,6 @@ const LeaveBalances = () => {
       }),
     ];
 
-    // Export all employees, not only the currently visible search results.
     const rows = employees.map((employee) => {
       const employeeBalancesForYear = balances.filter(
         (balance) =>
@@ -311,10 +309,8 @@ const LeaveBalances = () => {
 
   return (
     <div className="space-y-6">
-
       <div>
         <h1 className="text-2xl font-bold text-gray-800"> Leave Balances </h1>
-
         <p className="text-gray-500 mt-1">
           Manage leave allocations for your employees.
         </p>
@@ -679,7 +675,6 @@ const LeaveBalances = () => {
 
           <div className="bg-white w-full max-w-md rounded-2xl shadow-xl">
 
-            {/* Modal Header */}
             <div className="p-5 border-b flex justify-between items-center">
 
               <div>

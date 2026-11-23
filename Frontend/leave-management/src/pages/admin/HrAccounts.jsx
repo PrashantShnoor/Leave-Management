@@ -51,20 +51,15 @@ const HrAccounts = () => {
       setLoading(true);
       setErrorMessage("");
 
-      const response = await axios.get(
-        `${BASE_URL}/getAllHrAccounts`,
-        {
-          withCredentials: true,
-        }
+      const response = await axios.get(`${BASE_URL}/getAllHrAccounts`,
+        {withCredentials: true,}
       );
-
       setHrAccounts(response.data.data || []);
     } catch (error) {
       console.error(
         "Fetch HR accounts error:",
         error.response?.data || error
       );
-
       setErrorMessage(
         error.response?.data?.message ||
           "Unable to fetch HR accounts."
@@ -134,20 +129,14 @@ const HrAccounts = () => {
           withCredentials: true,
         }
       );
-
-      setSuccessMessage(
-        response.data.message || "HR account created successfully."
-      );
-
+      setSuccessMessage(response.data.message || "HR account created successfully.");
       setShowForm(false);
-
       await fetchHrAccounts();
     } catch (error) {
       console.error(
         "Create HR account error:",
         error.response?.data || error
       );
-
       setErrorMessage(
         error.response?.data?.message ||
           "Failed to create HR account."
@@ -156,7 +145,6 @@ const HrAccounts = () => {
       setCreating(false);
     }
   };
-
   const columns = [
     {
       key: "id",

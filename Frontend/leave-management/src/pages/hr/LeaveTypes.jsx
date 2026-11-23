@@ -21,10 +21,8 @@ const LeaveTypes = () => {
     description: "",
   });
 
-  // Get the current year
   const currentYear = new Date().getFullYear();
 
-  // Get today's date in local YYYY-MM-DD format
   const getTodayDate = () => {
     const today = new Date();
 
@@ -35,7 +33,6 @@ const LeaveTypes = () => {
     return `${year}-${month}-${day}`;
   };
 
-  // Fetch all required data from backend
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -66,8 +63,6 @@ const LeaveTypes = () => {
   useEffect(() => {
     fetchData();
   }, []);
-
-  // Calculate total allocated days for each leave type
   const getAllocatedDays = (leaveTypeId) => {
     return leaveBalances.reduce((total, balance) => {
       const isSameLeaveType =
@@ -84,7 +79,6 @@ const LeaveTypes = () => {
     }, 0);
   };
 
-  // Count distinct employees currently on approved leave
   const employeesOnLeave = useMemo(() => {
     const today = getTodayDate();
 
@@ -112,7 +106,6 @@ const LeaveTypes = () => {
     return employeeIds.size;
   }, [leaveRequests]);
 
-  // Add a new leave type
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -123,29 +116,21 @@ const LeaveTypes = () => {
 
     try {
       setIsSubmitting(true);
-
       await axios.post(`${BASE_URL}/createLeaveType`, {
         type: formData.name.trim(),
         description: formData.description.trim(),
       });
-
       setFormData({
         name: "",
         description: "",
       });
 
       setShowForm(false);
-
-      // Fetch the updated leave types from database
       await fetchData();
 
     } catch (error) {
       console.error("Create Leave Type Error:", error);
-
-      alert(
-        error.response?.data?.message ||
-          "Unable to create leave type."
-      );
+      alert(error.response?.data?.message ||"Unable to create leave type.");
     } finally {
       setIsSubmitting(false);
     }
@@ -153,8 +138,6 @@ const LeaveTypes = () => {
 
   return (
     <div className="space-y-6">
-
-      {/* Page Heading */}
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">
@@ -175,10 +158,7 @@ const LeaveTypes = () => {
         </button>
       </div>
 
-      {/* Summary Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-
-        {/* Total Leave Types */}
         <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
@@ -190,12 +170,10 @@ const LeaveTypes = () => {
                 {loading ? "..." : leaveTypes.length}
               </h2>
             </div>
-
             <FiLayers className="text-2xl text-green-600" />
           </div>
         </div>
 
-        {/* Employees Currently on Leave */}
         <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
@@ -211,10 +189,8 @@ const LeaveTypes = () => {
             <FiUsers className="text-2xl text-green-600" />
           </div>
         </div>
-
       </div>
 
-      {/* Leave Types Table */}
       <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
 
         <div className="border-b border-gray-100 p-5">
@@ -227,14 +203,12 @@ const LeaveTypes = () => {
           </p>
         </div>
 
-        {/* Loading */}
         {loading && (
           <div className="flex justify-center py-12">
             <span className="loading loading-spinner loading-lg text-green-600"></span>
           </div>
         )}
 
-        {/* Error */}
         {!loading && error && (
           <div className="p-5">
             <div className="rounded-lg border border-red-200 bg-red-50 p-4">
@@ -250,7 +224,6 @@ const LeaveTypes = () => {
           </div>
         )}
 
-        {/* Table */}
         {!loading && !error && (
           <div className="overflow-x-auto">
             <table className="table">
@@ -301,7 +274,6 @@ const LeaveTypes = () => {
         )}
       </div>
 
-      {/* Add Leave Type Modal */}
       {showForm && (
         <div className="modal modal-open">
           <div className="modal-box max-w-lg">
@@ -367,20 +339,10 @@ const LeaveTypes = () => {
               </div>
 
               <div className="modal-action">
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="btn"
-                  disabled={isSubmitting}
-                >
+                <button type="button" onClick={() => setShowForm(false)} className="btn" disabled={isSubmitting}>
                   Cancel
                 </button>
-
-                <button
-                  type="submit"
-                  className="btn border-none bg-green-600 text-white hover:bg-green-700"
-                  disabled={isSubmitting}
-                >
+                <button type="submit" className="btn border-none bg-green-600 text-white hover:bg-green-700" disabled={isSubmitting}>
                   {isSubmitting ? (
                     <span className="loading loading-spinner loading-sm"></span>
                   ) : (
@@ -391,16 +353,11 @@ const LeaveTypes = () => {
 
             </form>
           </div>
-
-          <div
-            className="modal-backdrop"
-            onClick={() => !isSubmitting && setShowForm(false)}
-          >
+          <div className="modal-backdrop" onClick={() => !isSubmitting && setShowForm(false)} >
             <button type="button">Close</button>
           </div>
         </div>
       )}
-
     </div>
   );
 };
