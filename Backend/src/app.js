@@ -1,9 +1,11 @@
 import express from "express";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
+import helmet from "helmet";
 import cors from "cors";
 import http from "http";
 import { createServer } from "http";
+import rateLimit from "express-rate-limit";
 
 import { connectDB } from "./config/database.js";
 
@@ -25,14 +27,22 @@ const app = express();
 const server = http.createServer(app);
 
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: process.env.CLIENT_URL || "http://localhost:5173",
   credentials: true,
 }));
 
+app.use(helmet());
 app.use(express.json());
 app.use(cookieParser());
 
 initializeSocket(server);
+const authLimiter = rateLimit({
+  windowMs : 15 * 60 * 1000,
+  max : 10 ,
+  message : { message : "Too many login attempts. Please try again later. "}
+});
+
+app.use("/login" , authLimiter);
 
 // Routes
 app.use("/", authRoutes);

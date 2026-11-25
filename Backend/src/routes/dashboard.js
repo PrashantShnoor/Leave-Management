@@ -7,7 +7,6 @@ const dashboardRoutes = express.Router();
 
 dashboardRoutes.get("/getAdminDashboard", authMiddleware, async (req, res) => {
   try {
-    // 1. Organization statistics
     const organizationQuery = await pool.query(`
       SELECT
         COUNT(*) FILTER (
@@ -21,9 +20,6 @@ dashboardRoutes.get("/getAdminDashboard", authMiddleware, async (req, res) => {
       FROM employees
     `);
 
-   
-
-    // 3. Leave request statistics
     const leaveStatisticsQuery = await pool.query(`
       SELECT
         COUNT(*) AS leave_requests,
@@ -43,7 +39,6 @@ dashboardRoutes.get("/getAdminDashboard", authMiddleware, async (req, res) => {
       FROM leave_request
     `);
 
-    // 4. Employees currently on leave
     const employeesOnLeaveQuery = await pool.query(`
       SELECT COUNT(DISTINCT employee_id) AS employees_on_leave
       FROM leave_request
@@ -51,9 +46,6 @@ dashboardRoutes.get("/getAdminDashboard", authMiddleware, async (req, res) => {
         AND CURRENT_DATE BETWEEN start_date AND end_date
     `);
 
-   
-
-    // 6. Prepare dashboard response
     const organization = {
       totalEmployees: Number(
         organizationQuery.rows[0].total_employees
@@ -68,18 +60,10 @@ dashboardRoutes.get("/getAdminDashboard", authMiddleware, async (req, res) => {
     };
 
     const leaveStatistics = {
-      pendingRequests: Number(
-        leaveStatisticsQuery.rows[0].pending_requests
-      ),
-      approvedRequests: Number(
-        leaveStatisticsQuery.rows[0].approved_requests
-      ),
-      rejectedRequests: Number(
-        leaveStatisticsQuery.rows[0].rejected_requests
-      ),
-      employeesOnLeave: Number(
-        employeesOnLeaveQuery.rows[0].employees_on_leave
-      ),
+      pendingRequests: Number(leaveStatisticsQuery.rows[0].pending_requests),
+      approvedRequests: Number(leaveStatisticsQuery.rows[0].approved_requests),
+      rejectedRequests: Number(leaveStatisticsQuery.rows[0].rejected_requests),
+      employeesOnLeave: Number(employeesOnLeaveQuery.rows[0].employees_on_leave),
     };
 
     return res.status(200).json({

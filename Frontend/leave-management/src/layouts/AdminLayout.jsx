@@ -15,6 +15,8 @@ import { RxActivityLog } from "react-icons/rx";
 import { FaCalendarAlt } from "react-icons/fa";
 import NotificationBell from "../components/common/Notificationbell";
 import useNotifications from "../hooks/notifications";
+import axios from "axios";
+import BASE_URL from "../utils/constants";
 
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -79,11 +81,18 @@ const AdminLayout = () => {
     },
   ];
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.removeItem("first_name");
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await axios.post(`${BASE_URL}/logout`,{},{
+        withCredentials : true
+      });
+    } catch (error) {
+      console.log("logout error" , error);
+    } finally{
+      sessionStorage.removeItem("user");
+      localStorage.removeItem("first_name");
+      navigate("/login" , {replace : true});
+    }
   };
 
   const closeSidebar = () => setSidebarOpen(false);

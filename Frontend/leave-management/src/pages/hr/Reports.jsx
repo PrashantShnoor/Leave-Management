@@ -30,7 +30,7 @@ const Reports = () => {
       setLoading(true);
       setError("");
 
-      const response = await axios.get(`${BASE_URL}/getAllrequest` );
+      const response = await axios.get(`${BASE_URL}/getAllrequest` , {withCredentials : true} );
       const requests = response.data.leave_requests || [];
       setLeaveRecords(requests);
     } catch (error) {

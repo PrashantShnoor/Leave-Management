@@ -9,25 +9,25 @@ const features = [
 
 const employees = [
   {
-    name: "Salem",
+    name: "Ram",
     id: "HR-2847",
     leaves: [4, 9, 10, 11],
     type: "vacation",
   },
   {
-    name: "Noura",
+    name: "Shyam",
     id: "HR-1593",
     leaves: [],
     type: "",
   },
   {
-    name: "Khaled",
+    name: "Sita",
     id: "HR-3062",
     leaves: [2, 3],
     type: "sick",
   },
   {
-    name: "Hind",
+    name: "Gita",
     id: "HR-4215",
     leaves: [8, 9],
     type: "overtime",

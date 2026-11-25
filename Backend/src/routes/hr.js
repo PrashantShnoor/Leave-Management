@@ -1,6 +1,8 @@
 import express from "express";
+import validator from "validator";
 import { pool } from "../config/database.js";
 import authMiddleware  from "../middleware/auth.js";
+import requireRole from "../middleware/role.js";
 import bcrypt from "bcrypt";
 import { saveNotification , emitNotification } from "../utils/notifications.js";
 const hrRoutes = express.Router();
@@ -36,18 +38,10 @@ hrRoutes.get("/getAllHrAccounts", authMiddleware, async (req, res) => {
   }
 });
 
-hrRoutes.post("/createHrAccount", authMiddleware, async (req, res) => {
+hrRoutes.post("/createHrAccount", authMiddleware,requireRole("admin") , async (req, res) => {
   try {
-    // Only admin can create HR accounts
-    // if (req.user?.role !== "admin") {
-    //   return res.status(403).json({
-    //     message: "Access denied. Admin only.",
-    //   });
-    // }
 
     const { first_name, last_name, email, password } = req.body;
-
-    // Validate required fields
     if (
       !first_name?.trim() ||
       !last_name?.trim() ||
@@ -59,8 +53,17 @@ hrRoutes.post("/createHrAccount", authMiddleware, async (req, res) => {
         message: "All fields are required.",
       });
     }
+    if (!validator.isEmail(email.trim())) {
+      return res.status(400).json({
+        message: "Please provide a valid email address.",
+      });
+    }
 
-    // Check if email already exists
+    if (!validator.isStrongPassword(password)) {
+      return res.status(400).json({
+        message: "Password must contain at least 8 characters, including uppercase, lowercase, number, and special character.",
+      });
+    }
     const existingUser = await pool.query(
       `SELECT id FROM employees WHERE LOWER(email) = LOWER($1)`,
       [email.trim()]
@@ -71,11 +74,8 @@ hrRoutes.post("/createHrAccount", authMiddleware, async (req, res) => {
         message: "Email already registered.",
       });
     }
-
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Insert HR account
     const result = await pool.query(
       `INSERT INTO employees
         (first_name, last_name, email, password_hash, role)

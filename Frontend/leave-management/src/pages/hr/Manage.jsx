@@ -68,7 +68,9 @@ const Manage = () => {
     try {
       setError("");
 
-      const response = await axios.get(BASE_URL + "/getAllrequest");
+      const response = await axios.get(BASE_URL + "/getAllrequest" , {
+        withCredentials : true , 
+      });
 
       const backendRequests = response.data.leave_requests || [];
 

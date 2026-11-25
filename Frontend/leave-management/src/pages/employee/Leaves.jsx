@@ -16,8 +16,6 @@ import {
 
 import BASE_URL from "../../utils/constants";
 
-const EMPLOYEE_ID = 6;
-
 const leaveTypeNames = {
   1: "Annual Leave",
   2: "Sick Leave",
@@ -192,19 +190,12 @@ const Leaves = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     setFormError("");
     setSuccessMessage("");
 
     const requestedDays = Number(formData.requestedDays);
 
-    if (
-      !formData.type ||
-      !formData.from ||
-      !formData.to ||
-      !formData.requestedDays ||
-      !formData.reason.trim()
-    ) {
+    if ( !formData.type || !formData.from || !formData.to || !formData.requestedDays || !formData.reason.trim()) {
       setFormError("Please fill in all required fields.");
       return;
     }
@@ -230,11 +221,7 @@ const Leaves = () => {
         reason: formData.reason.trim(),
       };
 
-      const response = await axios.post(
-        `${BASE_URL}/createLeave`,
-        payload,
-        { withCredentials: true }
-      );
+      const response = await axios.post(`${BASE_URL}/createLeave`, payload,{ withCredentials: true });
 
       if (!response.data.employee) {
         throw new Error("Invalid response received from server.");
@@ -248,14 +235,10 @@ const Leaves = () => {
 
     } catch (error) {
       console.error("Leave request failed:", error);
-
-      setFormError(
-        error.response?.data?.message ||
-          error.message ||
-          "Unable to submit leave request."
-      );
+      setFormError(error.response?.data?.message || error.message || "Unable to submit leave request.");
     } finally {
       setSubmitting(false);
+      setFormData(initialForm);
     }
   };
 

@@ -40,9 +40,9 @@ const LeaveTypes = () => {
 
       const [leaveTypeResponse, balanceResponse, requestResponse] =
         await Promise.all([
-          axios.get(`${BASE_URL}/getLeaveTypes`),
-          axios.get(`${BASE_URL}/getAllLeaveBalances`),
-          axios.get(`${BASE_URL}/getAllrequest`),
+          axios.get(`${BASE_URL}/getLeaveTypes` ,{ withCredentials: true }),
+          axios.get(`${BASE_URL}/getAllLeaveBalances` , { withCredentials: true }),
+          axios.get(`${BASE_URL}/getAllrequest` ,  { withCredentials: true }),
         ]);
 
       setLeaveTypes(leaveTypeResponse.data.data || []);
