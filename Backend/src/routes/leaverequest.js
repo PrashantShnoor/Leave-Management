@@ -61,7 +61,8 @@ leaveRequestRoutes.post("/createLeave",authMiddleware , async (req, res) => {
 
     const availableBalance = Number(allocated_days) - Number(used_days);
 
-    if (Number(requested_days) > availableBalance) {
+    const days = Number(requested_days);
+    if (Number(days) > availableBalance) {
       await client.query("ROLLBACK");
       transactionStarted = false;
       return res.status(400).json({
@@ -69,6 +70,16 @@ leaveRequestRoutes.post("/createLeave",authMiddleware , async (req, res) => {
         available_balance: availableBalance,
         requested_days: Number(requested_days),
       });
+    }
+    if(!Number.isFinite(days) || days <= 0) {
+      await client.query("ROLLBACK");
+      transactionStarted = false;
+      return res.status(400).json({ message: "requested_days must be a positive number." });
+    }
+    if (new Date(start_date) > new Date(end_date)) {
+      await client.query("ROLLBACK");
+      transactionStarted = false;
+      return res.status(400).json({ message: "start_date cannot be after end_date." });
     }
 
     const query = `
@@ -200,7 +211,7 @@ leaveRequestRoutes.get("/getLeaveRequests", authMiddleware ,async (req , res)=> 
   }
 })
 
-leaveRequestRoutes.get("/getAllrequest", async (req, res) => {
+leaveRequestRoutes.get("/getAllrequest",authMiddleware, async (req, res) => {
   try {
     const query = `
       SELECT

@@ -1,9 +1,11 @@
 import express from "express";
 import { pool } from "../config/database.js";
+import authMiddleware from "../middleware/auth.js";
+import requireRole from "../middleware/role.js";
 
 const leaveTypeRoutes = express.Router();
 
-leaveTypeRoutes.post("/createLeaveType", async (req, res) => {
+leaveTypeRoutes.post("/createLeaveType",authMiddleware ,requireRole("admin", "hr"),  async (req, res) => {
   try {
     const { type, description } = req.body;
 
@@ -37,7 +39,7 @@ leaveTypeRoutes.post("/createLeaveType", async (req, res) => {
   }
 });
 
-leaveTypeRoutes.get("/getLeaveTypes", async (req, res) => {
+leaveTypeRoutes.get("/getLeaveTypes",authMiddleware , async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT

@@ -1,18 +1,19 @@
 import validator from "validator";
 
-const validatesignupdata = (req) => {
+const ALLOWED_ROLES = ["employee" , "hr" , "admin"];
+export const validatesignupdata = (req) => {
     const { first_name , last_name , email , password_hash , role} = req;
 
-    if(!first_name || !last_name) {
+    if(!first_name?.trim() || !last_name?.trim()) {
         throw new Error("Invalid name");
     }
-    else if(!validator.isEmail(email)) {
+    else if(!email || !validator.isEmail(email)) {
         throw new Error("Invalid email address");
     }
-    else if(!validator.isStrongPassword(password_hash)) {
+    else if(!password_hash || !validator.isStrongPassword(password_hash)) {
         throw new Error("use strong password");
     }
-    else if(!role) {
+    else if(!role || !ALLOWED_ROLES.includes(String(role).toLocaleLowerCase())) {
         throw new Error("Invalid role");
     }
 }
@@ -45,7 +46,6 @@ export const validateRejectLeave = (req) => {
   }
 };
 
-
 export const validateCreateLeaveBalance = (data) => {
   const {
     employee_id,
@@ -77,6 +77,5 @@ export const validateCreateLeaveBalance = (data) => {
     throw new Error("Invalid leave_type_id");
   }
 };
-
 
 export default {validatesignupdata , validateApproveLeave , validateRejectLeave , validateCreateLeaveBalance};

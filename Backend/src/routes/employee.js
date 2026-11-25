@@ -1,6 +1,7 @@
 import express from "express";
 import { pool } from "../config/database.js";
 import authMiddleware from "../middleware/auth.js";
+import requireRole from "../middleware/role.js";
 const userRoutes = express.Router();
 
 
@@ -42,7 +43,7 @@ userRoutes.get("/getemployee", authMiddleware, async (req, res) => {
   }
 });
 
-userRoutes.patch("/updateEmployee/:id", async (req, res) => {
+userRoutes.patch("/updateEmployee/:id",authMiddleware , async (req, res) => {
   try {
     const { id } = req.params;
     const { first_name, last_name } = req.body;
@@ -89,7 +90,7 @@ userRoutes.patch("/updateEmployee/:id", async (req, res) => {
   }
 });
 
-userRoutes.delete("/deleteEmployee/:id", async (req, res) => {
+userRoutes.delete("/deleteEmployee/:id",authMiddleware ,requireRole("admin") , async (req, res) => {
   try {
     const { id } = req.params;
     if (!Number.isInteger(Number(id)) || Number(id) <= 0) {
@@ -126,7 +127,7 @@ userRoutes.delete("/deleteEmployee/:id", async (req, res) => {
   
 });
 
-userRoutes.get("/getAllEmployees", async (req, res) => {
+userRoutes.get("/getAllEmployees", authMiddleware , async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT

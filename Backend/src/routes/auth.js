@@ -2,26 +2,32 @@ import express from "express";
 import { pool } from "../config/database.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import validatesignupdata from "../utils/validator.js";
+import { validatesignupdata } from "../utils/validator.js";
 import authMiddleware  from "../middleware/auth.js"
 import { emitNotification, saveNotification } from "../utils/notifications.js";
-
+import requireRole from "../middleware/role.js";
 const authRoutes = express.Router();
 
-authRoutes.post("/signup" ,authMiddleware , async (req ,res) => {
+const isProduction = process.env.NODE_ENV === "production";
+
+const cookieOptions = {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? "strict" : "lax",
+    path: "/",
+};
+
+authRoutes.post("/signup" ,authMiddleware ,requireRole("admin") , async (req ,res) => {
     const client = await pool.connect();
+    let Transaction = false;
     let notifications = [];
     try {
-        if (req.user.role?.toLowerCase() !== "admin") {
-            return res.status(403).json({
-                message: "Only Admin can create new accounts.",
-            });
-        }
         const { first_name , last_name , email , password_hash , role } = req.body;
         validatesignupdata(req.body);
 
         const passwordhash = await bcrypt.hash(password_hash , 10);
 
+        Transaction = true;
         await client.query("BEGIN");
          const query = `
         INSERT INTO employees
@@ -55,6 +61,7 @@ authRoutes.post("/signup" ,authMiddleware , async (req ,res) => {
             notifications.push(notification);
         }
         await client.query("COMMIT");
+        Transaction = false;
 
         for(const notification of notifications) {
             emitNotification(notification);
@@ -73,6 +80,8 @@ authRoutes.post("/signup" ,authMiddleware , async (req ,res) => {
             });
         }
         return res.status(400).send("error saving the user :" + error.message);
+    } finally {
+        if(client) client.release();
     }
 });
 
@@ -108,7 +117,10 @@ authRoutes.post("/login" , async (req , res) => {
             {expiresIn : "1d"}
         );
 
-        res.cookie("token" , token);
+        res.cookie("token", token, {
+            ...cookieOptions,
+            maxAge: 24 * 60 * 60 * 1000,
+        });
 
         delete user.password_hash;
 
@@ -124,12 +136,11 @@ authRoutes.post("/login" , async (req , res) => {
     }
 });
 
-authRoutes.post("/logout" , async (req , res) => {
-    res.cookie("token" , null , {
-        expires : new Date(Date.now()),
+authRoutes.post("/logout", async (req, res) => {
+    res.clearCookie("token", cookieOptions);
+    res.status(200).json({
+        message: "User logged out successfully."
     });
-    res.send("user logout successfully");
-})
+});
 
 export default authRoutes;
-

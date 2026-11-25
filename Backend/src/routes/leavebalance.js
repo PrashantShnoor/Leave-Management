@@ -166,7 +166,7 @@ leaveBalanceRoute.get("/getLeavebalance" , authMiddleware , async (req , res)=> 
         
     }
 })
-leaveBalanceRoute.get("/getAllLeaveBalances", async (req, res) => {
+leaveBalanceRoute.get("/getAllLeaveBalances", authMiddleware , async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT
