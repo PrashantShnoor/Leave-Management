@@ -1,6 +1,6 @@
 # Leave Management System – Frontend
 
-A modern, responsive, role-based Single Page Application (SPA) for managing enterprise employee leaves, approvals, quotas, and organizational workflows. Built with **React 19**, **Vite**, **Tailwind CSS v4**, and **DaisyUI**.
+A modern, responsive, role-based Single Page Application (SPA) for managing enterprise employee leaves, approvals, quotas, and organizational workflows. Built with **React 19**, **Vite**, **Tailwind CSS v4**, **DaisyUI**, and **Socket.IO** for real-time notifications.
 
 ---
 
@@ -8,10 +8,11 @@ A modern, responsive, role-based Single Page Application (SPA) for managing ente
 
 - [Overview](#overview)
 - [Key Features](#key-features)
-  - [Public Portal](#1-public-portal)
-  - [Employee Portal](#2-employee-portal)
-  - [HR Portal](#3-hr-portal)
-  - [Admin Portal](#4-admin-portal)
+  - [1. Public Portal](#1-public-portal)
+  - [2. Employee Portal](#2-employee-portal)
+  - [3. HR Portal](#3-hr-portal)
+  - [4. Admin Portal](#4-admin-portal)
+  - [5. Real-Time Notification System](#5-real-time-notification-system)
 - [Tech Stack](#tech-stack)
 - [Project Architecture & Structure](#project-architecture--structure)
 - [Routing & Access Control (RBAC)](#routing--access-control-rbac)
@@ -22,12 +23,17 @@ A modern, responsive, role-based Single Page Application (SPA) for managing ente
   - [Running Development Server](#running-development-server)
   - [Building for Production](#building-for-production)
 - [Available Scripts](#available-scripts)
-- [API Integration & Authentication](#api-integration--authentication)
+- [API Integration & Real-Time Events](#api-integration--real-time-events)
 - [UI Components Guide](#ui-components-guide)
 - [Design System & Styling](#design-system--styling)
 
 ---
 
+## Overview
+
+The Leave Management System Frontend provides a unified interface for three distinct user roles: **Employees**, **Human Resources (HR)**, and **Administrators**. It streamlines leave applications, balance checks, managerial approvals, department configurations, activity auditing, and reporting through a clean, intuitive, and mobile-friendly interface powered by live WebSocket event updates.
+
+---
 
 ## Key Features
 
@@ -46,6 +52,7 @@ A modern, responsive, role-based Single Page Application (SPA) for managing ente
   - Leave application modal with auto-calculation of duration, date pickers, reason, and supporting document uploads.
   - Interactive search and filterable leave request history (Filter by: All, Pending, Approved, Rejected).
   - Detailed request modal inspection with reviewer remarks.
+- **Leave Reports (`/employee/leaveReports`):** Filterable personal leave history with date ranges, status filters, and report export.
 - **Profile (`/employee/profile`):** View personal information, department designation, contact information, joined date, and assigned role.
 
 ### 3. HR Portal
@@ -58,19 +65,27 @@ A modern, responsive, role-based Single Page Application (SPA) for managing ente
 - **Leave Balances (`/hr/leave-balances`):**
   - Allocate and adjust annual leave quotas per employee per leave category.
   - Filter and inspect yearly balances (`allocated_days`, `used_days`, `remaining`).
+- **Leave Availability (`/hr/leave-availability`):** Visual team schedule and absence calendar tracking employee availability.
 - **Leave Types (`/hr/leave-types`):** View and inspect organizational leave types, descriptions, and allocation limits.
 - **Reports & Export (`/hr/reports`):** Comprehensive report generation with status filters, date ranges, and export capabilities.
+- **Activity Logs (`/hr/activity-logs`):** Historical audit log viewer tracking leave updates, quota adjustments, and system events.
 
 ### 4. Admin Portal
 - **Admin Dashboard (`/admin/dashboard`):** High-level organization analytics (total employees, HR accounts, departments, leave volume, and system activity logs).
 - **Employee Management (`/admin/employees`):** Full CRUD overview of organization personnel.
 - **Create Employee (`/admin/create-employee`):** Modal/form interface to onboard new employees with credential assignment.
 - **HR Accounts (`/admin/hr-accounts`):** Dedicated provisioning and tracking of HR manager accounts.
-- **Department Management (`/admin/departments`):** Add, update, and manage organizational departments and track headcounts.
-- **Leave Configuration (`/admin/leave-configuration`):** Configure organizational leave policies, default yearly allocations, paid vs. unpaid types, and active statuses.
-- **Permissions Matrix (`/admin/permissions`):** Role-based access permission overview and toggles.
-- **Activity Logs (`/admin/activity-logs`):** Audit trail of actions performed across the platform (employee creation, policy updates, approvals).
-- **Settings (`/admin/settings`):** Global organization profiles, company information, and notification preferences.
+- **All Leave Requests (`/admin/leaveRequests`):** Global audit of all company-wide leave requests and approvals.
+- **Leave Availability Overview (`/admin/leave-availability`):** Cross-department workforce availability tracking.
+- **Activity Logs (`/admin/activity-logs`):** Full organizational audit trail of actions performed across the platform (employee creation, policy updates, approvals).
+
+### 5. Real-Time Notification System
+- **WebSocket Integration (`socket.io-client`):** Connects to the backend WebSocket server with cookie credentials.
+- **Custom React Hook (`useNotifications`):**
+  - Fetches notifications (`/notifications`) and unread count (`/notifications/unread-count`).
+  - Listens for live `notification:new` events and updates state instantly.
+  - Provides `markAsRead` and `markAllAsRead` mutation handlers.
+- **Notification Dropdown:** Interactive header bell icon with unread count badge, real-time toast alert popups, and click-to-mark-as-read drawer.
 
 ---
 
@@ -84,7 +99,8 @@ A modern, responsive, role-based Single Page Application (SPA) for managing ente
 | **UI Components** | [DaisyUI v5](https://daisyui.com/) | Accessible, customizable Tailwind component library |
 | **Routing** | [React Router v7](https://reactrouter.com/) | Client-side routing with nested layouts and route guards |
 | **HTTP Client** | [Axios](https://axios-http.com/) | Promise-based HTTP client with credentialed requests |
-| **Iconography** | [React Icons](https://react-icons.github.io/react-icons/) & [FontAwesome](https://fontawesome.com/) | Feather Icons (`fi`), FontAwesome (`fa`), and BoxIcons (`bi`) |
+| **Real-Time WebSockets** | [Socket.IO Client](https://socket.io/) | Bi-directional client communication for live notification dispatch |
+| **Iconography** | [React Icons](https://react-icons.github.io/react-icons/) & [FontAwesome](https://fontawesome.com/) | Feather Icons (`fi`), FontAwesome (`fa`), BoxIcons (`bi`), Remix Icons (`rx`) |
 | **Code Quality** | [ESLint](https://eslint.org/) | Code quality and linting configuration |
 
 ---
@@ -121,14 +137,17 @@ Frontend/leave-management/
 │   │       ├── LeaveRequestTable.jsx
 │   │       └── LeaveReviewModel.jsx
 │   │
+│   ├── hooks/                 # Custom React hooks
+│   │   └── notifications.js   # Live Socket.io notifications & unread counter hook
+│   │
 │   ├── layouts/               # Role-specific master layouts
-│   │   ├── AdminLayout.jsx        # Admin dashboard layout with sidebar & header
-│   │   └── EmployeeHrLayout.jsx   # Shared layout for Employee and HR portals
+│   │   ├── AdminLayout.jsx        # Admin dashboard layout with sidebar, header & notifications
+│   │   └── EmployeeHrLayout.jsx   # Shared layout for Employee and HR portals with notification bell
 │   │
 │   ├── pages/                 # Route page views
-│   │   ├── admin/             # Admin views (Dashboard, Departments, Logs, Settings)
-│   │   ├── employee/          # Employee views (Dashboard, Leaves, Profile)
-│   │   ├── hr/                # HR views (Dashboard, Manage, Balances, Reports)
+│   │   ├── admin/             # Admin views (Dashboard, Employees, HR Accounts, Requests, Logs)
+│   │   ├── employee/          # Employee views (Dashboard, Leaves, LeaveReport, Profile)
+│   │   ├── hr/                # HR views (Dashboard, Manage, Balances, Types, Availability, Reports, Logs)
 │   │   └── public/            # Public views (LandingPage, Login)
 │   │
 │   ├── routes/                # Route security and protection
@@ -160,26 +179,27 @@ The application enforces client-side role validation using `ProtectedRoutes.jsx`
 | :--- | :--- | :--- | :--- |
 | `/` | Public | None | Product landing page |
 | `/login` | Public | None | User authentication portal |
-| `/admin/*` | `admin` | `AdminLayout` | Organization administration & setup |
+| **Admin Portal** | | | |
 | `/admin/dashboard` | `admin` | `AdminLayout` | Organization metrics & system summary |
 | `/admin/employees` | `admin` | `AdminLayout` | Employee directory |
 | `/admin/create-employee` | `admin` | `AdminLayout` | Create a new employee |
 | `/admin/hr-accounts` | `admin` | `AdminLayout` | Manage HR manager accounts |
-| `/admin/departments` | `admin` | `AdminLayout` | Department configuration |
-| `/admin/leave-configuration`| `admin`| `AdminLayout`| Leave type and quota policy setup |
-| `/admin/permissions` | `admin` | `AdminLayout` | Access control settings |
-| `/admin/activity-logs` | `admin` | `AdminLayout` | Audit and activity logs |
-| `/admin/settings` | `admin` | `AdminLayout` | System & company settings |
-| `/hr/*` | `hr` | `EmployeeHrLayout` | HR management portal |
+| `/admin/leaveRequests` | `admin` | `AdminLayout` | Company-wide leave request audit |
+| `/admin/leave-availability`| `admin`| `AdminLayout`| Department workforce availability calendar |
+| `/admin/activity-logs` | `admin` | `AdminLayout` | System audit and activity logs |
+| **HR Portal** | | | |
 | `/hr/dashboard` | `hr` | `EmployeeHrLayout` | HR metrics and approval queues |
 | `/hr/manage` | `hr` | `EmployeeHrLayout` | Review & approve/reject leave requests |
 | `/hr/employees` | `hr` | `EmployeeHrLayout` | Employee records and profiles |
 | `/hr/leave-balances` | `hr` | `EmployeeHrLayout` | Quota allocation per employee |
 | `/hr/leave-types` | `hr` | `EmployeeHrLayout` | Leave categories list |
+| `/hr/leave-availability`| `hr` | `EmployeeHrLayout`| Team calendar and absence planner |
 | `/hr/reports` | `hr` | `EmployeeHrLayout` | Leave analytics and export |
-| `/employee/*` | `employee` | `EmployeeHrLayout` | Employee portal |
+| `/hr/activity-logs` | `hr` | `EmployeeHrLayout` | Audit logs of leave management actions |
+| **Employee Portal** | | | |
 | `/employee/dashboard` | `employee` | `EmployeeHrLayout` | Personal balance & leave summary |
 | `/employee/leaves` | `employee` | `EmployeeHrLayout` | Apply for leave & view history |
+| `/employee/leaveReports` | `employee` | `EmployeeHrLayout` | Personal leave reports and exports |
 | `/employee/profile` | `employee` | `EmployeeHrLayout` | User personal details |
 
 ### Authentication Guard Logic
@@ -277,9 +297,9 @@ In the project directory, you can run:
 
 ---
 
-## API Integration & Authentication
+## API Integration & Real-Time Events
 
-### Cookie & Session Handling
+### 1. Cookie & Session Handling
 All API requests using Axios are configured with credentials enabled to support secure, HTTP-only cookie-based authentication:
 
 ```javascript
@@ -291,40 +311,39 @@ const response = await axios.get(`${BASE_URL}/getemployee`, {
 });
 ```
 
-### Primary Backend Endpoints Consumed
+### 2. WebSocket Real-Time Events
+The frontend connects via Socket.IO:
 
-- **Authentication:**
-  - `POST /login` – Authenticates user credentials and returns role & session.
-  - `POST /logout` – Clears session cookies and terminates session.
-- **Employees:**
-  - `POST /signup` – Registers new employee records (Admin).
-  - `GET /getemployee` – Fetches profile details for the authenticated user.
-  - `GET /getAllEmployees` – Fetches all employees for management & allocation.
-  - `PATCH /updateEmployee/:id` – Updates employee details.
-  - `DELETE /deleteEmployee/:id` – Removes an employee.
-- **Leave Balances & Types:**
-  - `GET /getLeaveTypes` – Retrieves active leave categories.
-  - `POST /createLeaveType` – Creates a new leave category.
-  - `GET /getLeaveBalance/:employee_id` – Retrieves quota balances for an employee.
-  - `POST /allocateLeave` – Allocates annual leave quota per leave type.
-- **Leave Requests & Workflow:**
-  - `POST /applyLeave` – Submits a leave request with dates, reason, and duration.
-  - `GET /getLeaveRequests` – Retrieves submitted leave applications.
-  - `PATCH /approveLeave/:id` – Atomically approves a leave request and updates balance.
-  - `PATCH /rejectLeave/:id` – Rejects a leave request with optional comments.
-- **Admin Dashboard:**
-  - `GET /getAdminDashboard` – Retrieves system statistics, KPI counters, and audit activity.
+```javascript
+import { io } from "socket.io-client";
+import BASE_URL from "../utils/constants";
+
+const socket = io(BASE_URL, {
+  withCredentials: true,
+});
+
+socket.on("notification:new", (notification) => {
+  // Triggers immediate UI updates and increments badge counters
+});
+```
+
+### 3. Primary Endpoints Consumed
+- **Auth:** `POST /login`, `POST /logout`, `POST /signup`
+- **Employee:** `GET /getemployee`, `GET /getAllEmployees`, `PATCH /updateEmployee/:id`, `DELETE /deleteEmployee/:id`
+- **Leaves:** `POST /createLeave`, `GET /getLeaveRequests`, `GET /getAllrequest`, `PATCH /approveLeave/:id`, `PATCH /rejectLeave/:id`
+- **Balances & Types:** `GET /getLeaveTypes`, `POST /createLeaveType`, `GET /getLeavebalance`, `POST /createLeavebalance`, `GET /getAllLeaveBalances`
+- **Notifications:** `GET /notifications`, `GET /notifications/unread-count`, `PATCH /notifications/:id/read`, `PATCH /notifications/read-all`
+- **Activity Logs:** `GET /getActivityLogs`
+- **Dashboards:** `GET /getAdminDashboard`, `GET /hrDashboardSummary`, `GET /getAllHrAccounts`, `POST /createHrAccount`
 
 ---
 
 ## UI Components Guide
 
-The project utilizes a modular component architecture:
-
 ### Common Components (`src/components/common/`)
 - **`SummaryCard.jsx`**: Responsive stat card displaying icons, metric titles, quantitative values, and trend indicators.
 - **`DataTable.jsx`**: Generic, styled table component supporting empty states, loading indicators, and action buttons.
-- **`StatusBadge.jsx`**: Dynamic badge rendering color-coded statuses (`Pending` = yellow/amber, `Approved` = green, `Rejected` = red).
+- **`StatusBadge.jsx`**: Dynamic badge rendering color-coded statuses (`Pending` = amber, `Approved` = green, `Rejected` = red).
 - **`LoadingSpinner.jsx`**: Centered loading spinner for asynchronous network requests.
 - **`ConfirmationModel.jsx`**: Reusable modal for destructive actions (e.g., delete confirmation).
 - **`DetailItem.jsx`**: Clean label-value pair component for profile and inspection drawers.
@@ -343,22 +362,12 @@ The project utilizes a modular component architecture:
 - **DaisyUI v5 Component Kit:** Provides accessible button primitives, modals, dropdowns, badges, and alerts.
 - **Responsive Layout:**
   - Collapsible side navigation on mobile and tablet screens.
-  - Sticky top navigation bar with profile dropdown and notifications.
+  - Sticky top navigation bar with profile dropdown and live notification dropdown bell.
   - Scrollable table containers and grid-based responsive dashboard cards.
 - **Theme:** Configured with a clean, professional corporate light theme.
-
----
-
-## Contributing & Development Guidelines
-
-1. **Component Modularity:** Place reusable widgets in `src/components/common/` and domain-specific components in their respective subdirectories (`admin/`, `hr/`, `employee/`).
-2. **Path Aliasing & Imports:** Maintain consistent relative import paths and verify casing across Windows and Linux environments.
-3. **Linting:** Ensure all code adheres to ESLint rules before committing (`npm run lint`).
-4. **State Management:** Use localized React state (`useState`, `useMemo`, `useEffect`) and lift state to parent pages or layouts where appropriate.
 
 ---
 
 ## License
 
 This project is proprietary and intended for internal corporate leave management. All rights reserved.
-

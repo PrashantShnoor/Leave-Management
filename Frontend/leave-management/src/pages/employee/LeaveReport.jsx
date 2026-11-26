@@ -131,8 +131,6 @@ const LeaveReport = () => {
     const csvContent = [headers, ...rows]
       .map((row) => row.map(escapeCsvValue).join(","))
       .join("\r\n");
-
-    // BOM helps spreadsheet applications such as Microsoft Excel read UTF-8 correctly.
     const blob = new Blob(["\uFEFF", csvContent], {
       type: "text/csv;charset=utf-8;",
     });

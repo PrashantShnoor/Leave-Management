@@ -88,8 +88,6 @@ const Profile = () => {
 
   return (
     <div className="space-y-6">
-
-      {/* Page Header */}
       <div>
         <h1 className="text-2xl font-bold text-green-900">
           My Profile
@@ -98,8 +96,6 @@ const Profile = () => {
           View your personal and employment information.
         </p>
       </div>
-
-      {/* Profile Overview */}
       <div className="overflow-hidden rounded-xl border border-green-100 bg-white shadow-sm">
 
         <div className="h-28 bg-linear-to-r from-green-700 to-green-500" />
@@ -124,19 +120,12 @@ const Profile = () => {
               <span className="badge badge-outline border-green-300 text-green-700">
                 {profile.role?.toUpperCase() || "N/A"}
               </span>
-
-              <StatusBadge
-                status={profile.is_active ? "active" : "inactive"}
-              />
             </div>
           </div>
 
         </div>
       </div>
-
-      {/* Personal Information */}
       <section className="overflow-hidden rounded-xl border border-green-100 bg-white shadow-sm">
-
         <div className="flex items-center gap-3 border-b border-green-100 bg-green-50 px-5 py-4">
           <FiUser className="text-green-700" size={20} />
 
@@ -152,28 +141,15 @@ const Profile = () => {
 
         <div className="grid grid-cols-1 gap-6 p-5 sm:grid-cols-2">
 
-          <DetailItem
-            label="First Name"
-            value={profile.first_name || "N/A"}
-            icon={<FiUser />}
-          />
+          <DetailItem label="First Name" value={profile.first_name || "N/A"} icon={<FiUser />} />
 
-          <DetailItem
-            label="Last Name"
-            value={profile.last_name || "N/A"}
-            icon={<FiUser />}
-          />
+          <DetailItem label="Last Name" value={profile.last_name || "N/A"} icon={<FiUser />} />
 
-          <DetailItem
-            label="Email Address"
-            value={profile.email || "N/A"}
-            icon={<FiMail />}
-          />
+          <DetailItem label="Email Address" value={profile.email || "N/A"} icon={<FiMail />} />
 
         </div>
       </section>
 
-      {/* Employment Information */}
       <section className="overflow-hidden rounded-xl border border-green-100 bg-white shadow-sm">
 
         <div className="flex items-center gap-3 border-b border-green-100 bg-green-50 px-5 py-4">
@@ -191,24 +167,11 @@ const Profile = () => {
 
         <div className="grid grid-cols-1 gap-6 p-5 sm:grid-cols-2">
 
-          <DetailItem
-            label="Employee ID"
-            value={profile.id || "N/A"}
-            icon={<FiUser />}
-          />
+          <DetailItem label="Employee ID" value={profile.id || "N/A"} icon={<FiUser />} />
 
-          <DetailItem
-            label="Account Role"
-            value={profile.role || "N/A"}
-            icon={<FiShield />}
-          />
+          <DetailItem label="Account Role" value={profile.role || "N/A"} icon={<FiShield />} />
 
-          <DetailItem
-            label="Joining Date"
-            value={formatDate(profile.created_at)}
-            icon={<FiCalendar />}
-          />
-
+          <DetailItem label="Joining Date" value={formatDate(profile.created_at)} icon={<FiCalendar />} />
         </div>
       </section>
 
