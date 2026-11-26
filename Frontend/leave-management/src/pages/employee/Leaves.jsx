@@ -279,7 +279,6 @@ const Leaves = () => {
     <div className="min-h-screen bg-base-200/50 p-4 md:p-6">
       <div className="mx-auto max-w-7xl space-y-7">
 
-        {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="flex size-10 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">

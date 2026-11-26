@@ -24,7 +24,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Fetch dashboard summary from backend
+
   const fetchDashboardSummary = async () => {
     try {
       setLoading(true);
